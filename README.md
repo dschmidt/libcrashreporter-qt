@@ -4,7 +4,7 @@ libcrashreporter-qt
 This library is supposed to provide an easy integration of Google Breakpad crash reporting into a Qt application
 
 #### Features
-* Cross-platform (Linux, Mac OS X and Windows currently)
+* Cross-platform (Linux and Windows currently, Mac OS X probably slightly broken/WIP)
 * Simple API to launch an external crash reporter GUI
 
 #### TODO
