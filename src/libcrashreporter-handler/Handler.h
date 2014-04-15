@@ -1,9 +1,8 @@
-/* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
- * 
+/*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
  *
- *   Tomahawk is free software: you can redistribute it and/or modify
+ *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
  *   (at your option) any later version.
@@ -27,22 +26,22 @@ namespace google_breakpad
 namespace CrashReporter
 {
 
-class Launcher
+class Handler
 {
     const char* m_crashReporterChar; // yes! It MUST be const char[]
     const wchar_t* m_crashReporterWChar;
-    
+
 public:
     Launcher(const QString& dumpFolderPath, bool active, const QString& crashReporter );
     virtual ~Launcher();
-       
+
     static void setActive( bool enabled );
     static bool isActive();
-      
+
     void setCrashReporter( const QString& crashReporter );
     const char* crashReporterChar() const { return m_crashReporterChar; }
     const wchar_t* crashReporterWChar() const { return m_crashReporterWChar; }
-    
+
 private:
     google_breakpad::ExceptionHandler* m_crash_handler;
 };

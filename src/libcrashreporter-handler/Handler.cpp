@@ -1,9 +1,8 @@
-/* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
- *
+/*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
  *
- *   Tomahawk is free software: you can redistribute it and/or modify
+ *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
  *   (at your option) any later version.
@@ -17,17 +16,16 @@
  *   along with Tomahawk. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Launcher.h"
+#include "Handler.h"
 
-#include <string.h>
-#include <QString>
-#include <QDebug>
-#include <QFileInfo>
-#include <QCoreApplication>
-
-
-
+#include <string>
 #include <iostream>
+
+#include <QCoreApplication>
+#include <QFileInfo>
+#include <QString>
+
+#include <QDebug>
 
 #ifdef __APPLE__
 #   include <client/mac/handler/exception_handler.h>
@@ -45,14 +43,14 @@ bool s_active = true;
 
 
 void
-Launcher::setActive( bool enabled )
+Handler::setActive( bool enabled )
 {
     s_active = enabled;
 }
 
 
 bool
-Launcher::isActive()
+Handler::isActive()
 {
     return s_active;
 }
@@ -63,15 +61,15 @@ LaunchUploader( const wchar_t* dump_dir, const wchar_t* minidump_id, void* conte
 {
     if ( !succeeded )
         return false;
-    
+
     // DON'T USE THE HEAP!!!
     // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
-    
-    
-    const wchar_t* crashReporter = static_cast<Launcher*>(context)->crashReporterWChar();
+
+
+    const wchar_t* crashReporter = static_cast<Handler*>(context)->crashReporterWChar();
     if ( !s_active || wcslen( crashReporter ) == 0 )
         return false;
-    
+
     wchar_t command[MAX_PATH * 3 + 6];
     wcscpy( command, crashReporter);
     wcscat( command, L" \"");
@@ -79,25 +77,25 @@ LaunchUploader( const wchar_t* dump_dir, const wchar_t* minidump_id, void* conte
     wcscat( command, L"/" );
     wcscat( command, minidump_id );
     wcscat( command, L".dmp\"" );
-    
-    
+
+
 
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
-    
+
     ZeroMemory( &si, sizeof( si ) );
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_SHOWNORMAL;
     ZeroMemory( &pi, sizeof(pi) );
-    
+
     if ( CreateProcess( NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi ) )
     {
         CloseHandle( pi.hProcess );
         CloseHandle( pi.hThread );
         TerminateProcess( GetCurrentProcess(), 1 );
     }
-    
+
     return succeeded;
 }
 
@@ -116,21 +114,21 @@ LaunchUploader( const google_breakpad::MinidumpDescriptor& descriptor, void* con
 LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bool succeeded)
 {
 #endif
-        
+
         if ( !succeeded )
         {
             printf("Could not write crash dump file");
             return false;
         }
-        
+
         // DON'T USE THE HEAP!!!
         // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
-        
+
     #ifdef Q_OS_LINUX
         const char* path = descriptor.path();
     #else // Q_OS_MAC
         const char* extension = "dmp";
-        
+
         char path[4096];
         strcpy(path, dump_dir);
         strcat(path, "/");
@@ -138,13 +136,13 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
         strcat(path, ".");
         strcat(path,  extension);
     #endif
-        
+
         printf("Dump file was written to: %s\n", path);
-        
-        const char* crashReporter = static_cast<Launcher*>(context)->crashReporterChar();
+
+        const char* crashReporter = static_cast<Handler*>(context)->crashReporterChar();
         if ( !s_active || strlen( crashReporter ) == 0 )
             return false;
-        
+
         pid_t pid = fork();
         if ( pid == -1 ) // fork failed
             return false;
@@ -155,13 +153,13 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
                    crashReporter,
                    path,
                    (char*) 0 );
-            
+
             // execl replaces this process, so no more code will be executed
             // unless it failed. If it failed, then we should return false.
             printf( "Error: Can't launch CrashReporter!\n" );
             return false;
         }
-        
+
         // we called fork()
         return true;
     }
@@ -170,13 +168,13 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
 #endif
 
 
-Launcher::Launcher( const QString& dumpFolderPath, bool active, const QString& crashReporter  )
+Handler::Handler( const QString& dumpFolderPath, bool active, const QString& crashReporter  )
 {
     s_active = active;
-    
+
     printf("Install crash handler....");
-    
-  
+
+
     #if defined Q_OS_LINUX
     m_crash_handler =  new google_breakpad::ExceptionHandler( google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()), NULL, LaunchUploader, this, true, -1 );
     #elif defined Q_OS_MAC
@@ -185,7 +183,7 @@ Launcher::Launcher( const QString& dumpFolderPath, bool active, const QString& c
 //     m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), 0, LaunchUploader, this, true, 0 );
     m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdWString(), 0, LaunchUploader, this, true, 0 );
     #endif
-    
+
     printf("Installed crash handler....");
 
 
@@ -196,28 +194,28 @@ Launcher::Launcher( const QString& dumpFolderPath, bool active, const QString& c
 
 
 void
-Launcher::setCrashReporter( const QString& crashReporter )
+Handler::setCrashReporter( const QString& crashReporter )
 {
     QString localReporter = QString( "%1/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
     QString globalReporter = QString( "%1/../libexec/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
-    
+
     if ( QFileInfo( localReporter ).exists() )
         crashReporter = localReporter;
     else if ( QFileInfo( globalReporter ).exists() )
         crashReporter = globalReporter;
     else
         qDebug() << "Could not find \"" << crashReporter << "\" in ../libexec or application path";
-  
-    
+
+
     // cache reporter path as char*
     char* creporter;
     std::string sreporter = crashReporter.toStdString();
     creporter = new char[ sreporter.size() + 1 ];
     strcpy( creporter, sreporter.c_str() );
     m_crashReporterChar = creporter;
-    
+
     qDebug() << "m_crashReporterChar: " << m_crashReporterChar;
-    
+
     // cache reporter path as wchart_t*
     wchar_t* wreporter;
     std::wstring wsreporter = crashReporter.toStdWString();
@@ -228,7 +226,7 @@ Launcher::setCrashReporter( const QString& crashReporter )
 }
 
 
-Launcher::~Launcher()
+Handler::~Handler()
 {
     delete m_crash_handler;
 }

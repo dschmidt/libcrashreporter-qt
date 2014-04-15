@@ -1,1 +1,1 @@
-add_subdirectory(libcrashreporter-launcher)
+add_subdirectory(libcrashreporter-handler)
