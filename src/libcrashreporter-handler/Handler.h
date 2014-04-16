@@ -32,8 +32,8 @@ class Handler
     const wchar_t* m_crashReporterWChar;
 
 public:
-    Launcher(const QString& dumpFolderPath, bool active, const QString& crashReporter );
-    virtual ~Launcher();
+    Handler(const QString& dumpFolderPath, bool active, const QString& crashReporter );
+    virtual ~Handler();
 
     static void setActive( bool enabled );
     static bool isActive();

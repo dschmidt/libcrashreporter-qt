@@ -196,15 +196,18 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
 void
 Handler::setCrashReporter( const QString& crashReporter )
 {
+    QString crashReporterPath;
     QString localReporter = QString( "%1/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
     QString globalReporter = QString( "%1/../libexec/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
 
     if ( QFileInfo( localReporter ).exists() )
-        crashReporter = localReporter;
+        crashReporterPath = localReporter;
     else if ( QFileInfo( globalReporter ).exists() )
-        crashReporter = globalReporter;
-    else
+        crashReporterPath = globalReporter;
+    else {
         qDebug() << "Could not find \"" << crashReporter << "\" in ../libexec or application path";
+        crashReporterPath = crashReporter;
+    }
 
 
     // cache reporter path as char*
