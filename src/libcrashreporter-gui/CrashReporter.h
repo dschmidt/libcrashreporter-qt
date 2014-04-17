@@ -34,6 +34,8 @@ class Q_DECL_EXPORT CrashReporter : public QDialog
 public:
     CrashReporter( const QUrl& url, const QStringList& argv );
     virtual ~CrashReporter( );
+
+    void setLogo(const QPixmap& logo);
     
 private:
     Ui::CrashReporter ui;

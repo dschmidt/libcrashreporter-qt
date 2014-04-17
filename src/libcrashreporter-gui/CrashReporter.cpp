@@ -34,14 +34,11 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
 : m_reply( 0 )
 , m_url( url )
 {
-    setWindowIcon( QIcon( RESPATH "icons/tomahawk-icon-128x128.png" ) );
-    
     ui.setupUi( this );
-    ui.logoLabel->setPixmap( QPixmap( RESPATH "icons/tomahawk-icon-128x128.png" ).scaled( QSize( 55, 55 ), Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
     ui.progressBar->setRange( 0, 100 );
     ui.progressBar->setValue( 0 );
     ui.progressLabel->setPalette( Qt::gray );
-    
+
     #ifdef Q_OS_MAC
     QFont f = ui.bottomLabel->font();
     f.setPointSize( 10 );
@@ -79,6 +76,13 @@ CrashReporter::~CrashReporter()
     delete m_reply;
 }
 
+
+void
+CrashReporter::setLogo( const QPixmap& logo )
+{
+    ui.logoLabel->setPixmap( logo.scaled( QSize( 55, 55 ), Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
+    setWindowIcon( logo );
+}
 
 static QByteArray
 contents( const QString& path )
