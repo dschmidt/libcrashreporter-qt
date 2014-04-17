@@ -96,82 +96,40 @@ contents( const QString& path )
 void
 CrashReporter::send()
 {
+    // TODO: check if dump file actually exists ...
+
+    // add minidump file
+    setReportData( "upload_file_minidump",
+        contents( m_minidump_file_path ),
+        "application/octet-stream",
+        QFileInfo( m_minidump_file_path ).fileName().toUtf8() );
+
+
     QByteArray body;
-    
-//     // socorro expects a 10 digit build id
-//     QRegExp rx( "(\\d+\\.\\d+\\.\\d+).(\\d+)" );
-//     rx.exactMatch( TomahawkUtils::appFriendlyVersion() );
-//     //QString const version = rx.cap( 1 );
-//     QString const buildId = rx.cap( 2 ).leftJustified( 10, '0' );
-    
-    // add parameters
-    typedef QPair<QByteArray, QByteArray> Pair;
-    QList<Pair> pairs;
-    pairs  //<< Pair( "BuildID", buildId.toUtf8() )
-    << Pair( "ProductName",  PRODUCT_NAME)
-    //<< Pair( "Version", TomahawkUtils::appFriendlyVersion().toLocal8Bit() )
-    //<< Pair( "Vendor", "Tomahawk" )
-    //<< Pair( "timestamp", QByteArray::number( QDateTime::currentDateTime().toTime_t() ) )
-    
-    //            << Pair("InstallTime", "1357622062")
-    //            << Pair("Theme", "classic/1.0")
-    //            << Pair("Version", "30")
-    //            << Pair("id", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}")
-    //            << Pair("Vendor", "Mozilla")
-    //            << Pair("EMCheckCompatibility", "true")
-    //            << Pair("Throttleable", "0")
-    //            << Pair("URL", "http://code.google.com/p/crashme/")
-    //            << Pair("version", "20.0a1")
-    //            << Pair("CrashTime", "1357770042")
-    //            << Pair("ReleaseChannel", "nightly")
-    //            << Pair("submitted_timestamp", "2013-01-09T22:21:18.646733+00:00")
-    //            << Pair("buildid", "20130107030932")
-    //            << Pair("timestamp", "1357770078.646789")
-    //            << Pair("Notes", "OpenGL: NVIDIA Corporation -- GeForce 8600M GT/PCIe/SSE2 -- 3.3.0 NVIDIA 313.09 -- texture_from_pixmap\r\n")
-    //            << Pair("StartupTime", "1357769913")
-    //            << Pair("FramePoisonSize", "4096")
-    //            << Pair("FramePoisonBase", "7ffffffff0dea000")
-    //            << Pair("Add-ons", "%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D:20.0a1,crashme%40ted.mielczarek.org:0.4")
-    //            << Pair("BuildID", "YYYYMMDDHH")
-    //            << Pair("SecondsSinceLastCrash", "1831736")
-    //            << Pair("ProductName", "WaterWolf")
-    //            << Pair("legacy_processing", "0")
-    //            << Pair("ProductID", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}")
-    
-    ;
-    
-    
-    
-    foreach ( Pair const pair, pairs )
+    foreach (const QByteArray& name, m_formContents.keys() )
     {
         body += "--thkboundary\r\n";
-        body += "Content-Disposition: form-data; name=\"" +
-        pair.first  + "\"\r\n\r\n" +
-        pair.second + "\r\n";
+
+        body += "Content-Disposition: form-data; name=\"" + name + "\"";
+
+        if ( !m_formFileNames.value( name ).isEmpty() && !m_formContentTypes.value( name ).isEmpty() )
+        {
+            body += "; filename=\"" + m_formFileNames.value( name ) + "\"\r\n";
+            body += "Content-Type: " + m_formContentTypes.value( name ) + "\r\n";
+        }
+        else
+        {
+            body += "\r\n";
+        }
+
+        body += "\r\n";
+
+        body += m_formContents.value( name ) + "\r\n";
     }
-    
-    // TODO: check if dump file actually exists ...
-    
-    // add minidump file
+
     body += "--thkboundary\r\n";
-    body += "Content-Disposition: form-data; name=\"upload_file_minidump\"; filename=\""
-    + QFileInfo( m_minidump_file_path ).fileName() + "\"\r\n";
-    body += "Content-Type: application/octet-stream\r\n";
-    body += "\r\n";
-    body += contents( m_minidump_file_path );
-    body += "\r\n";
-    
-    
-    
-//     // add logfile
-//     body += "--thkboundary\r\n";
-//     body += "Content-Disposition: form-data; name=\"upload_file_tomahawklog\"; filename=\"Tomahawk.log\"\r\n";
-//     body += "Content-Type: application/x-gzip\r\n";
-//     body += "\r\n";
-//     body += qCompress( contents( LOGFILE ) );
-//     body += "\r\n";
-//     body += "--thkboundary--\r\n";
-    
+
+
     QNetworkAccessManager* nam = new QNetworkAccessManager( this );
     m_request->setHeader( QNetworkRequest::ContentTypeHeader, "multipart/form-data; boundary=thkboundary" );
     m_reply = nam->post( *m_request, body );
@@ -240,4 +198,22 @@ CrashReporter::onSendButton()
     setFixedSize( size() );
     
     QTimer::singleShot( 0, this, SLOT( send() ) );
+}
+
+void
+CrashReporter::setReportData(const QByteArray& name, const QByteArray& content)
+{
+    m_formContents.insert( name, content );
+}
+
+void
+CrashReporter::setReportData(const QByteArray& name, const QByteArray& content, const QByteArray& contentType, const QByteArray& fileName)
+{
+    setReportData( name, content );
+
+    if( !contentType.isEmpty() && !fileName.isEmpty() )
+    {
+        m_formContentTypes.insert( name, contentType );
+        m_formFileNames.insert( name, fileName );
+    }
 }

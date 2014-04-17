@@ -23,6 +23,7 @@
 #include <QFile>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QByteArray>
 
 #include "ui_CrashReporter.h"
 
@@ -36,6 +37,9 @@ public:
     virtual ~CrashReporter( );
 
     void setLogo(const QPixmap& logo);
+
+    void setReportData(const QByteArray& name, const QByteArray& content);
+    void setReportData(const QByteArray& name, const QByteArray& content, const QByteArray& contentType, const QByteArray& fileName);
     
 private:
     Ui::CrashReporter ui;
@@ -44,6 +48,11 @@ private:
     QNetworkRequest* m_request;
     QNetworkReply* m_reply;
     QUrl m_url;
+
+    QMap < QByteArray, QByteArray > m_formContents;
+    QMap < QByteArray, QByteArray > m_formContentTypes;
+    QMap < QByteArray, QByteArray > m_formFileNames;
+
     
 public slots:
     void send();
