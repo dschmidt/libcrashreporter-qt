@@ -8,9 +8,8 @@ This library is supposed to provide an easy integration of Google Breakpad crash
 * Simple API to launch an external crash reporter GUI
 
 #### TODO
-* Import Reporter GUI from Tomahawk
-* Expose API to configure the uploaded data
-* Make lib installable / packagable
+* Add documentation/examples
+* Make lib installable/packagable
 * Tell me!
 
 #### FAQ
@@ -31,7 +30,8 @@ Because I'm waiting for your pull request to clean it up.
 No.
 
 ###### How do I install it?
-Not at all right now. It's used as a submodule for now. But it's a high prio to make this packagable as soon as everything works.
+Not at all right now. It's used as a submodule for now.
+
 
 #### Contact
 \#tomahawk on Freenode
