@@ -29,7 +29,7 @@
 
 #ifdef __APPLE__
 #   include <client/mac/handler/exception_handler.h>
-#elif defined WIN32
+#elif defined _WIN32
 #   include <client/windows/handler/exception_handler.h>
 #elif defined __linux__
 #   include <client/linux/handler/exception_handler.h>
