@@ -25,7 +25,10 @@
 #include <QNetworkRequest>
 #include <QByteArray>
 
-#include "ui_CrashReporter.h"
+namespace Ui
+{
+    class CrashReporter;
+}
 
 
 class Q_DECL_EXPORT CrashReporter : public QDialog
@@ -42,8 +45,8 @@ public:
     void setReportData(const QByteArray& name, const QByteArray& content, const QByteArray& contentType, const QByteArray& fileName);
     
 private:
-    Ui::CrashReporter ui;
-    
+    Ui::CrashReporter* m_ui;
+
     QString m_minidump_file_path;
     QNetworkRequest* m_request;
     QNetworkReply* m_reply;

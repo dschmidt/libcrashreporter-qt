@@ -26,33 +26,38 @@
 
 // #include "utils/TomahawkUtils.h"
 
+#include "ui_CrashReporter.h"
+
+
 // #define LOGFILE TomahawkUtils::appLogDir().filePath( "Tomahawk.log" ).toLocal8Bit()
 #define RESPATH ":/data/"
 #define PRODUCT_NAME "WaterWolf"
 
 CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
-: m_reply( 0 )
+: m_ui( 0 )
+, m_reply( 0 )
 , m_url( url )
 {
-    ui.setupUi( this );
-    ui.progressBar->setRange( 0, 100 );
-    ui.progressBar->setValue( 0 );
-    ui.progressLabel->setPalette( Qt::gray );
+    m_ui = new Ui::CrashReporter();
+    m_ui->setupUi( this );
+    m_ui->progressBar->setRange( 0, 100 );
+    m_ui->progressBar->setValue( 0 );
+    m_ui->progressLabel->setPalette( Qt::gray );
 
     #ifdef Q_OS_MAC
-    QFont f = ui.bottomLabel->font();
+    QFont f = m_ui->bottomLabel->font();
     f.setPointSize( 10 );
-    ui.bottomLabel->setFont( f );
+    m_ui->bottomLabel->setFont( f );
     f.setPointSize( 11 );
-    ui.progressLabel->setFont( f );
-    ui.progressLabel->setIndent( 3 );
+    m_ui->progressLabel->setFont( f );
+    m_ui->progressLabel->setIndent( 3 );
     #else
-    ui.vboxLayout->setSpacing( 16 );
-    ui.hboxLayout1->setSpacing( 16 );
-    ui.progressBar->setTextVisible( false );
-    ui.progressLabel->setIndent( 1 );
-    ui.bottomLabel->setDisabled( true );
-    ui.bottomLabel->setIndent( 1 );
+    m_ui->vboxLayout->setSpacing( 16 );
+    m_ui->hboxLayout1->setSpacing( 16 );
+    m_ui->progressBar->setTextVisible( false );
+    m_ui->progressLabel->setIndent( 1 );
+    m_ui->bottomLabel->setDisabled( true );
+    m_ui->bottomLabel->setIndent( 1 );
     #endif //Q_OS_MAC
     
     m_request = new QNetworkRequest( m_url );
@@ -60,10 +65,10 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
     m_minidump_file_path = args.value( 1 );
     
     //hide until "send report" has been clicked
-    ui.progressBar->setVisible( false );
-    ui.button->setVisible( false );
-    ui.progressLabel->setVisible( false );
-    connect( ui.sendButton, SIGNAL( clicked() ), SLOT( onSendButton() ) );
+    m_ui->progressBar->setVisible( false );
+    m_ui->button->setVisible( false );
+    m_ui->progressLabel->setVisible( false );
+    connect( m_ui->sendButton, SIGNAL( clicked() ), SLOT( onSendButton() ) );
     
     adjustSize();
     setFixedSize( size() );
@@ -80,7 +85,7 @@ CrashReporter::~CrashReporter()
 void
 CrashReporter::setLogo( const QPixmap& logo )
 {
-    ui.logoLabel->setPixmap( logo.scaled( QSize( 55, 55 ), Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
+    m_ui->logoLabel->setPixmap( logo.scaled( QSize( 55, 55 ), Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
     setWindowIcon( logo );
 }
 
@@ -151,9 +156,9 @@ CrashReporter::onProgress( qint64 done, qint64 total )
     {
         QString const msg = tr( "Uploaded %L1 of %L2 KB." ).arg( done / 1024 ).arg( total / 1024 );
         
-        ui.progressBar->setMaximum( total );
-        ui.progressBar->setValue( done );
-        ui.progressLabel->setText( msg );
+        m_ui->progressBar->setMaximum( total );
+        m_ui->progressBar->setValue( done );
+        m_ui->progressLabel->setText( msg );
     }
 }
 
@@ -162,8 +167,8 @@ void
 CrashReporter::onDone()
 {
     QByteArray data = m_reply->readAll();
-    ui.progressBar->setValue( ui.progressBar->maximum() );
-    ui.button->setText( tr( "Close" ) );
+    m_ui->progressBar->setValue( m_ui->progressBar->maximum() );
+    m_ui->button->setText( tr( "Close" ) );
     
     QString const response = QString::fromUtf8( data );
     
@@ -172,15 +177,15 @@ CrashReporter::onDone()
         onFail( m_reply->error(), m_reply->errorString() );
     }
     else
-        ui.progressLabel->setText( tr( "Sent! <b>Many thanks</b>." ) );
+        m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>." ) );
 }
 
 
 void
 CrashReporter::onFail( int error, const QString& errorString )
 {
-    ui.button->setText( tr( "Close" ) );
-    ui.progressLabel->setText( tr( "Failed to send crash info." ) );
+    m_ui->button->setText( tr( "Close" ) );
+    m_ui->progressLabel->setText( tr( "Failed to send crash info." ) );
     qDebug() << "Error:" << error << errorString;
 }
 
@@ -188,11 +193,11 @@ CrashReporter::onFail( int error, const QString& errorString )
 void
 CrashReporter::onSendButton()
 {
-    ui.progressBar->setVisible( true );
-    ui.button->setVisible( true );
-    ui.progressLabel->setVisible( true );
-    ui.sendButton->setEnabled( false );
-    ui.dontSendButton->setEnabled( false );
+    m_ui->progressBar->setVisible( true );
+    m_ui->button->setVisible( true );
+    m_ui->progressLabel->setVisible( true );
+    m_ui->sendButton->setEnabled( false );
+    m_ui->dontSendButton->setEnabled( false );
     
     adjustSize();
     setFixedSize( size() );
