@@ -31,7 +31,7 @@ namespace Ui
 }
 
 
-class Q_DECL_EXPORT CrashReporter : public QDialog
+class CrashReporter : public QDialog
 {
     Q_OBJECT
     
