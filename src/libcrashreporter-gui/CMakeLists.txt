@@ -25,4 +25,4 @@ set_target_properties(crashreporter-gui PROPERTIES AUTOMOC ON)
 #    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 #)
 
-qt5_use_modules(crashreporter-gui Widgets Network)
+qt5_use_modules(crashreporter-gui Core Widgets Network)
