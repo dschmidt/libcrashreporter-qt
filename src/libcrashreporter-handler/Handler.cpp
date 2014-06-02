@@ -178,7 +178,7 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     #if defined Q_OS_LINUX
     m_crash_handler =  new google_breakpad::ExceptionHandler( google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()), NULL, LaunchUploader, this, true, -1 );
     #elif defined Q_OS_MAC
-    m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL)
+    m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
 //     m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), 0, LaunchUploader, this, true, 0 );
     m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdWString(), 0, LaunchUploader, this, true, 0 );
