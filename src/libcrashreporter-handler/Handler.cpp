@@ -172,9 +172,6 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
 {
     s_active = active;
 
-    printf("Install crash handler....");
-
-
     #if defined Q_OS_LINUX
     m_crash_handler =  new google_breakpad::ExceptionHandler( google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()), NULL, LaunchUploader, this, true, -1 );
     #elif defined Q_OS_MAC
@@ -184,12 +181,7 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdWString(), 0, LaunchUploader, this, true, 0 );
     #endif
 
-    printf("Installed crash handler....");
-
-
-    printf("find crash reporter...");
     setCrashReporter( crashReporter );
-
 }
 
 
