@@ -1,5 +1,5 @@
 /* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
- * 
+ *
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *
  *   Tomahawk is free software: you can redistribute it and/or modify
@@ -59,17 +59,17 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
     m_ui->bottomLabel->setDisabled( true );
     m_ui->bottomLabel->setIndent( 1 );
     #endif //Q_OS_MAC
-    
+
     m_request = new QNetworkRequest( m_url );
-    
+
     m_minidump_file_path = args.value( 1 );
-    
+
     //hide until "send report" has been clicked
     m_ui->progressBar->setVisible( false );
     m_ui->button->setVisible( false );
     m_ui->progressLabel->setVisible( false );
     connect( m_ui->sendButton, SIGNAL( clicked() ), SLOT( onSendButton() ) );
-    
+
     adjustSize();
     setFixedSize( size() );
 }
@@ -144,7 +144,7 @@ CrashReporter::send()
     QNetworkAccessManager* nam = new QNetworkAccessManager( this );
     m_request->setHeader( QNetworkRequest::ContentTypeHeader, "multipart/form-data; boundary=thkboundary" );
     m_reply = nam->post( *m_request, body );
-    
+
     #if QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 )
     connect( m_reply, SIGNAL( finished() ), SLOT( onDone() ), Qt::QueuedConnection );
     connect( m_reply, SIGNAL( uploadProgress( qint64, qint64 ) ), SLOT( onProgress( qint64, qint64 ) ) );
@@ -161,7 +161,7 @@ CrashReporter::onProgress( qint64 done, qint64 total )
     if ( total )
     {
         QString const msg = tr( "Uploaded %L1 of %L2 KB." ).arg( done / 1024 ).arg( total / 1024 );
-        
+
         m_ui->progressBar->setMaximum( total );
         m_ui->progressBar->setValue( done );
         m_ui->progressLabel->setText( msg );
@@ -175,9 +175,9 @@ CrashReporter::onDone()
     QByteArray data = m_reply->readAll();
     m_ui->progressBar->setValue( m_ui->progressBar->maximum() );
     m_ui->button->setText( tr( "Close" ) );
-    
+
     QString const response = QString::fromUtf8( data );
-    
+
     if ( ( m_reply->error() != QNetworkReply::NoError ) || !response.startsWith( "CrashID=" ) )
     {
         onFail( m_reply->error(), m_reply->errorString() );
@@ -204,10 +204,10 @@ CrashReporter::onSendButton()
     m_ui->progressLabel->setVisible( true );
     m_ui->sendButton->setEnabled( false );
     m_ui->dontSendButton->setEnabled( false );
-    
+
     adjustSize();
     setFixedSize( size() );
-    
+
     QTimer::singleShot( 0, this, SLOT( send() ) );
 }
 

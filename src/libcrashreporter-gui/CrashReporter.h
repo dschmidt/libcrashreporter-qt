@@ -1,5 +1,5 @@
 /* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
- * 
+ *
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *
  *   Tomahawk is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ namespace Ui
 class CrashReporter : public QDialog
 {
     Q_OBJECT
-    
+
 public:
     CrashReporter( const QUrl& url, const QStringList& argv );
     virtual ~CrashReporter( );
@@ -44,7 +44,7 @@ public:
 
     void setReportData(const QByteArray& name, const QByteArray& content);
     void setReportData(const QByteArray& name, const QByteArray& content, const QByteArray& contentType, const QByteArray& fileName);
-    
+
 private:
     Ui::CrashReporter* m_ui;
 
@@ -57,10 +57,10 @@ private:
     QMap < QByteArray, QByteArray > m_formContentTypes;
     QMap < QByteArray, QByteArray > m_formFileNames;
 
-    
+
 public slots:
     void send();
-    
+
 private slots:
     void onDone();
     void onProgress( qint64 done, qint64 total );
