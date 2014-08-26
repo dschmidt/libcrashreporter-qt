@@ -89,6 +89,12 @@ CrashReporter::setLogo( const QPixmap& logo )
     setWindowIcon( logo );
 }
 
+void
+CrashReporter::setText( const QString& text )
+{
+    m_ui->topLabel->setText(text);
+}
+
 static QByteArray
 contents( const QString& path )
 {

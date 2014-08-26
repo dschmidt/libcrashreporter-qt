@@ -40,6 +40,7 @@ public:
     virtual ~CrashReporter( );
 
     void setLogo(const QPixmap& logo);
+    void setText(const QString& text);
 
     void setReportData(const QByteArray& name, const QByteArray& content);
     void setReportData(const QByteArray& name, const QByteArray& content, const QByteArray& contentType, const QByteArray& fileName);
