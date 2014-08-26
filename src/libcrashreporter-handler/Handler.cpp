@@ -212,7 +212,7 @@ Handler::setCrashReporter( const QString& crashReporter )
 
     // cache reporter path as char*
     char* creporter;
-    std::string sreporter = crashReporter.toStdString();
+    std::string sreporter = crashReporterPath.toStdString();
     creporter = new char[ sreporter.size() + 1 ];
     strcpy( creporter, sreporter.c_str() );
     m_crashReporterChar = creporter;
@@ -221,7 +221,7 @@ Handler::setCrashReporter( const QString& crashReporter )
 
     // cache reporter path as wchart_t*
     wchar_t* wreporter;
-    std::wstring wsreporter = crashReporter.toStdWString();
+    std::wstring wsreporter = crashReporterPath.toStdWString();
     wreporter = new wchar_t[ wsreporter.size() + 10 ];
     wcscpy( wreporter, wsreporter.c_str() );
     m_crashReporterWChar = wreporter;
