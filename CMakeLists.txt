@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(libcrashreporter-qt)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS)
     # Breakpad uses GNU compiler extensions like typeof.
     # Luckily these features are not used on OSX, so we can build the
     # crashreporter there with the normal C++11 standard.
