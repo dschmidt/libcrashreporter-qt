@@ -307,7 +307,7 @@ class ExceptionHandler {
   // Signals the exception handler thread to handle the exception.
   static LONG WINAPI HandleException(EXCEPTION_POINTERS* exinfo);
 
-// #if _MSC_VER >= 1400  // MSVC 2005/8
+#if _MSC_VER >= 1400  // MSVC 2005/8
   // This function will be called by some CRT functions when they detect
   // that they were passed an invalid parameter.  Note that in _DEBUG builds,
   // the CRT may display an assertion dialog before calling this function,
@@ -318,7 +318,7 @@ class ExceptionHandler {
                                      const wchar_t* file,
                                      unsigned int line,
                                      uintptr_t reserved);
-// #endif  // _MSC_VER >= 1400
+#endif  // _MSC_VER >= 1400
 
   // This function will be called by the CRT when a pure virtual
   // function is called.

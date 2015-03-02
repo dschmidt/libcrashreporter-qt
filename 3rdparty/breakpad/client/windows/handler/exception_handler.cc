@@ -281,10 +281,10 @@ void ExceptionHandler::Initialize(
     if (handler_types & HANDLER_EXCEPTION)
       previous_filter_ = SetUnhandledExceptionFilter(HandleException);
 
-//#if _MSC_VER >= 1400  // MSVC 2005/8
+#if _MSC_VER >= 1400  // MSVC 2005/8
     if (handler_types & HANDLER_INVALID_PARAMETER)
       previous_iph_ = _set_invalid_parameter_handler(HandleInvalidParameter);
-//#endif  // _MSC_VER >= 1400
+#endif  // _MSC_VER >= 1400
 
     if (handler_types & HANDLER_PURECALL)
       previous_pch_ = _set_purecall_handler(HandlePureVirtualCall);
@@ -308,10 +308,10 @@ ExceptionHandler::~ExceptionHandler() {
     if (handler_types_ & HANDLER_EXCEPTION)
       SetUnhandledExceptionFilter(previous_filter_);
 
-//#if _MSC_VER >= 1400  // MSVC 2005/8
+#if _MSC_VER >= 1400  // MSVC 2005/8
     if (handler_types_ & HANDLER_INVALID_PARAMETER)
       _set_invalid_parameter_handler(previous_iph_);
-//#endif  // _MSC_VER >= 1400
+#endif  // _MSC_VER >= 1400
 
     if (handler_types_ & HANDLER_PURECALL)
       _set_purecall_handler(previous_pch_);
@@ -531,7 +531,7 @@ LONG ExceptionHandler::HandleException(EXCEPTION_POINTERS* exinfo) {
   return action;
 }
 
-//#if _MSC_VER >= 1400  // MSVC 2005/8
+#if _MSC_VER >= 1400  // MSVC 2005/8
 // static
 void ExceptionHandler::HandleInvalidParameter(const wchar_t* expression,
                                               const wchar_t* function,
@@ -624,7 +624,7 @@ void ExceptionHandler::HandleInvalidParameter(const wchar_t* expression,
   // the behavior of "swallowing" exceptions.
   exit(0);
 }
-//#endif  // _MSC_VER >= 1400
+#endif  // _MSC_VER >= 1400
 
 // static
 void ExceptionHandler::HandlePureVirtualCall() {
