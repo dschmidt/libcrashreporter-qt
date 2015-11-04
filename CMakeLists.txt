@@ -6,6 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS)
     # Luckily these features are not used on OSX, so we can build the
     # crashreporter there with the normal C++11 standard.
     string(REPLACE "-std=c++11" "-std=gnu++11" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    string(REPLACE "-std=c++14" "-std=gnu++14" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 endif()
 
 add_subdirectory(3rdparty)
