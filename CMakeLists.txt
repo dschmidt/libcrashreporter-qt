@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 2.6)
 project(libcrashreporter-qt)
+cmake_minimum_required(VERSION 2.8.11)
+cmake_policy(SET CMP0020 OLD)
 
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS)
     # Breakpad uses GNU compiler extensions like typeof.
