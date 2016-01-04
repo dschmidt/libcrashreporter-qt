@@ -183,7 +183,11 @@ CrashReporter::onDone()
         onFail( m_reply->error(), m_reply->errorString() );
     }
     else
-        m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>." ) );
+    {
+        QString crashId = response.split("\n").at(0).split("=").at(1);
+
+        m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>. Please refer to crash <b>%1</b> in bug reports." ).arg(crashId) );
+    }
 }
 
 
