@@ -208,7 +208,9 @@ CrashReporter::onSendButton()
     m_ui->progressLabel->setVisible( true );
     m_ui->sendButton->setEnabled( false );
     m_ui->dontSendButton->setEnabled( false );
+    m_ui->commentTextEdit->setEnabled( false );
 
+    setReportData( "Comment", m_ui->commentTextEdit->toPlainText().toUtf8() );
     adjustSize();
     setFixedSize( size() );
 
