@@ -210,7 +210,7 @@ CrashReporter::onSendButton()
     m_ui->dontSendButton->setEnabled( false );
     m_ui->commentTextEdit->setEnabled( false );
 
-    setReportData( "Comment", m_ui->commentTextEdit->toPlainText().toUtf8() );
+    setReportData( "Comments", m_ui->commentTextEdit->toPlainText().toUtf8() );
     adjustSize();
     setFixedSize( size() );
 
