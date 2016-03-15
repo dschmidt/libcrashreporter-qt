@@ -95,6 +95,13 @@ CrashReporter::setText( const QString& text )
     m_ui->topLabel->setText(text);
 }
 
+void
+CrashReporter::setBottomText( const QString& text )
+{
+    m_ui->bottomLabel->setText(text);
+    m_ui->bottomLabel->setVisible(!text.isEmpty());
+}
+
 static QByteArray
 contents( const QString& path )
 {
