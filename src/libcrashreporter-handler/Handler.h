@@ -1,6 +1,7 @@
 /*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,6 +17,8 @@
  *   along with Tomahawk. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+
 class QString;
 
 namespace google_breakpad
@@ -26,13 +29,21 @@ namespace google_breakpad
 namespace CrashReporter
 {
 
+#ifdef Q_OS_LINUX
+static bool LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void* context );
+#endif
+
 class Handler
 {
     const char* m_crashReporterChar; // yes! It MUST be const char[]
     const wchar_t* m_crashReporterWChar;
 
 public:
+#ifdef Q_OS_LINUX
     Handler(const QString& dumpFolderPath, bool active, const QString& crashReporter );
+#else
+    Handler(const QString& dumpFolderPath, bool active, const QString& crashReporter );
+#endif
     virtual ~Handler();
 
     static void setActive( bool enabled );
@@ -43,6 +54,7 @@ public:
     const wchar_t* crashReporterWChar() const { return m_crashReporterWChar; }
 
 private:
+    friend bool CrashReporter::LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void* context );
     google_breakpad::ExceptionHandler* m_crash_handler;
 };
 

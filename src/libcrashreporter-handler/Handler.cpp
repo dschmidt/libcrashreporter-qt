@@ -34,6 +34,9 @@
 #elif defined __linux__
 #   include <client/linux/handler/exception_handler.h>
 #   include <client/linux/handler/minidump_descriptor.h>
+#   include "linux-backtrace-generator/backtracegenerator.h"
+#   include "linux-backtrace-generator/debugger.h"
+#   include "linux-backtrace-generator/crashedapplication.h"
 #endif
 
 namespace CrashReporter
@@ -168,12 +171,48 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
 #endif
 
 
+#ifdef Q_OS_LINUX
+bool
+LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void* context )
+{
+    const google_breakpad::ExceptionHandler::CrashContext* cxt =
+            (const google_breakpad::ExceptionHandler::CrashContext*)( crash_context );
+    const CrashedApplication* app = new CrashedApplication( QCoreApplication::applicationPid(),
+                                                            cxt->siginfo.si_signo,
+                                                            QCoreApplication::applicationName(),
+                                                            QFileInfo(QCoreApplication::applicationFilePath()),
+                                                            QCoreApplication::applicationName(),
+                                                            QCoreApplication::applicationVersion(),
+                                                            cxt->tid,
+                                                            QDateTime::currentDateTime() );
+
+    BacktraceGenerator* gen = new BacktraceGenerator(
+                                  Debugger::availableInternalDebuggers( "KCrash" ).first(),
+                                  app,
+                                  nullptr );
+    gen->start();
+
+    // TODO: make this run synchronized
+
+
+    return false;
+}
+#endif
+
+
 Handler::Handler( const QString& dumpFolderPath, bool active, const QString& crashReporter  )
 {
     s_active = active;
 
     #if defined Q_OS_LINUX
-    m_crash_handler =  new google_breakpad::ExceptionHandler( google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()), NULL, LaunchUploader, this, true, -1 );
+    m_crash_handler =  new google_breakpad::ExceptionHandler(
+                           google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()),
+                           NULL,
+                           LaunchUploader,
+                           this,
+                           true,
+                           -1 );
+    m_crash_handler->set_crash_handler(LinuxBacktraceParser);
     #elif defined Q_OS_MAC
     m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
