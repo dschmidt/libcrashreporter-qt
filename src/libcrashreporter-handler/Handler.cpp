@@ -1,6 +1,7 @@
 /*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -37,6 +38,9 @@
 #   include "linux-backtrace-generator/backtracegenerator.h"
 #   include "linux-backtrace-generator/debugger.h"
 #   include "linux-backtrace-generator/crashedapplication.h"
+#   include <QEventLoop>
+#   include <QStandardPaths>
+#   include <QDir>
 #endif
 
 namespace CrashReporter
@@ -175,8 +179,13 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
 bool
 LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void* context )
 {
+    // For whatever reason the callback signature passes the crash context as an opaque
+    // object, but from what I gather from the comments in exception_handler.h, this
+    // cast should always be safe.
+    // We need it for the signal number and thread ID.      -- Teo 3/2016
     const google_breakpad::ExceptionHandler::CrashContext* cxt =
             (const google_breakpad::ExceptionHandler::CrashContext*)( crash_context );
+
     const CrashedApplication* app = new CrashedApplication( QCoreApplication::applicationPid(),
                                                             cxt->siginfo.si_signo,
                                                             QCoreApplication::applicationName(),
@@ -190,11 +199,46 @@ LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void
                                   Debugger::availableInternalDebuggers( "KCrash" ).first(),
                                   app,
                                   nullptr );
+
+    // BacktraceGenerator is asynchronous, it runs gdb in QProcess (which is itself
+    // asynchronous) and reads the backtrace from gdb line by line. It then sends the
+    // backtrace over to BacktraceParser line by line, and when all of it is done (or
+    // when something failed) it notifies the world with signals.
+    // We need to wait here because the present function is the only way to pass a custom
+    // handler to Breakpad.                                 -- Teo 3/2016
+    QEventLoop loop;
+    QObject::connect( gen, &BacktraceGenerator::done,
+                      &loop, &QEventLoop::quit );
+    QObject::connect( gen, &BacktraceGenerator::someError,
+                      &loop, &QEventLoop::quit );
+    QObject::connect( gen, &BacktraceGenerator::failedToStart,
+                      &loop, &QEventLoop::quit );
     gen->start();
+    loop.exec();
 
-    // TODO: make this run synchronized
+    if ( BacktraceGenerator::Loaded )
+    {
+        QString btPath = QString( "%1%2calamares-gdb-%3.txt" )
+                         .arg( QStandardPaths::writableLocation( QStandardPaths::TempLocation ) )
+                         .arg( QDir::separator() )
+                         .arg( QDateTime::currentMSecsSinceEpoch() );
+        QFile btFile( btPath );
+        if ( btFile.open( QFile::WriteOnly | QFile::Text ) )
+        {
+            QTextStream out( &btFile );
+            out << gen->backtrace();
+            out.flush();
+            qDebug() << "GDB backtrace written to" << btPath;
+        }
+        else
+            qDebug() << "Cannot open file" << btPath << "to save the backtrace.";
+    }
+    else
+        qDebug() << "Error generating gdb backtrace.";
 
-
+    // We always return false so Breakpad will continue with generating the minidump the
+    // usual way. Had we returned true here, to Breakpad it would mean "I'm done with
+    // making the minidump", which is of course not the case here.
     return false;
 }
 #endif
