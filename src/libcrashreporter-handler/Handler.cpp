@@ -1,6 +1,7 @@
 /*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -34,6 +35,12 @@
 #elif defined __linux__
 #   include <client/linux/handler/exception_handler.h>
 #   include <client/linux/handler/minidump_descriptor.h>
+#   include "linux-backtrace-generator/backtracegenerator.h"
+#   include "linux-backtrace-generator/debugger.h"
+#   include "linux-backtrace-generator/crashedapplication.h"
+#   include <QEventLoop>
+#   include <QStandardPaths>
+#   include <QDir>
 #endif
 
 namespace CrashReporter
@@ -143,6 +150,10 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
         if ( !s_active || strlen( crashReporter ) == 0 )
             return false;
 
+        const char* linuxBacktracePath = static_cast<Handler*>(context)->linuxBacktracePathChar();
+        if ( strlen( linuxBacktracePath ) == 0 )
+            return false;
+
         pid_t pid = fork();
         if ( pid == -1 ) // fork failed
             return false;
@@ -152,6 +163,7 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
             execl( crashReporter,
                    crashReporter,
                    path,
+                   linuxBacktracePath,
                    (char*) 0 );
 
             // execl replaces this process, so no more code will be executed
@@ -168,12 +180,95 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
 #endif
 
 
+#ifdef Q_OS_LINUX
+bool
+LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void* context )
+{
+    // For whatever reason the callback signature passes the crash context as an opaque
+    // object, but from what I gather from the comments in exception_handler.h, this
+    // cast should always be safe.
+    // We need it for the signal number and thread ID.      -- Teo 3/2016
+    const google_breakpad::ExceptionHandler::CrashContext* cxt =
+            (const google_breakpad::ExceptionHandler::CrashContext*)( crash_context );
+
+    const CrashedApplication* app = new CrashedApplication( QCoreApplication::applicationPid(),
+                                                            cxt->siginfo.si_signo,
+                                                            QCoreApplication::applicationName(),
+                                                            QFileInfo(QCoreApplication::applicationFilePath()),
+                                                            QCoreApplication::applicationName(),
+                                                            QCoreApplication::applicationVersion(),
+                                                            cxt->tid,
+                                                            QDateTime::currentDateTime() );
+
+    BacktraceGenerator* gen = new BacktraceGenerator(
+                                  Debugger::availableInternalDebuggers( "KCrash" ).first(),
+                                  app,
+                                  nullptr );
+
+    // BacktraceGenerator is asynchronous, it runs gdb in QProcess (which is itself
+    // asynchronous) and reads the backtrace from gdb line by line. It then sends the
+    // backtrace over to BacktraceParser line by line, and when all of it is done (or
+    // when something failed) it notifies the world with signals.
+    // We need to wait here because the present function is the only way to pass a custom
+    // handler to Breakpad.                                 -- Teo 3/2016
+    QEventLoop loop;
+    QObject::connect( gen, &BacktraceGenerator::done,
+                      &loop, &QEventLoop::quit );
+    QObject::connect( gen, &BacktraceGenerator::someError,
+                      &loop, &QEventLoop::quit );
+    QObject::connect( gen, &BacktraceGenerator::failedToStart,
+                      &loop, &QEventLoop::quit );
+    gen->start();
+    loop.exec();
+
+    if ( BacktraceGenerator::Loaded )
+    {
+        QString btPath = QString( "%1%2calamares-gdb-%3.txt" )
+                         .arg( QStandardPaths::writableLocation( QStandardPaths::TempLocation ) )
+                         .arg( QDir::separator() )
+                         .arg( QDateTime::currentMSecsSinceEpoch() );
+        QFile btFile( btPath );
+        if ( btFile.open( QFile::WriteOnly | QFile::Text ) )
+        {
+            QTextStream out( &btFile );
+            out << gen->backtrace();
+            out.flush();
+            qDebug() << "GDB backtrace written to" << btPath;
+
+            // Cache backtrace file path as C string
+            char* btPathCString;
+            std::string btPathStdString = btPath.toStdString();
+            btPathCString = new char[ btPathStdString.size() + 1 ];
+            strcpy( btPathCString, btPathStdString.c_str() );
+            static_cast<Handler*>(context)->m_linuxBacktracePathChar = btPathCString;
+        }
+        else
+            qDebug() << "Cannot open file" << btPath << "to save the backtrace.";
+    }
+    else
+        qDebug() << "Error generating gdb backtrace.";
+
+    // We always return false so Breakpad will continue with generating the minidump the
+    // usual way. Had we returned true here, to Breakpad it would mean "I'm done with
+    // making the minidump", which is of course not the case here.
+    return false;
+}
+#endif
+
+
 Handler::Handler( const QString& dumpFolderPath, bool active, const QString& crashReporter  )
 {
     s_active = active;
 
     #if defined Q_OS_LINUX
-    m_crash_handler =  new google_breakpad::ExceptionHandler( google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()), NULL, LaunchUploader, this, true, -1 );
+    m_crash_handler =  new google_breakpad::ExceptionHandler(
+                           google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()),
+                           NULL,
+                           LaunchUploader,
+                           this,
+                           true,
+                           -1 );
+    m_crash_handler->set_crash_handler(LinuxBacktraceParser);
     #elif defined Q_OS_MAC
     m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
