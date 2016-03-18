@@ -17,6 +17,8 @@
  *   along with Tomahawk. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QtGlobal> // needed for Q_OS_LINUX here
+
 #include <stdlib.h>
 
 class QString;
@@ -41,6 +43,7 @@ class Handler
 public:
 #ifdef Q_OS_LINUX
     Handler(const QString& dumpFolderPath, bool active, const QString& crashReporter );
+    const char* linuxBacktracePathChar() { return m_linuxBacktracePathChar; }
 #else
     Handler(const QString& dumpFolderPath, bool active, const QString& crashReporter );
 #endif
@@ -54,6 +57,9 @@ public:
     const wchar_t* crashReporterWChar() const { return m_crashReporterWChar; }
 
 private:
+#ifdef Q_OS_LINUX
+    const char* m_linuxBacktracePathChar;
+#endif
     friend bool CrashReporter::LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void* context );
     google_breakpad::ExceptionHandler* m_crash_handler;
 };
