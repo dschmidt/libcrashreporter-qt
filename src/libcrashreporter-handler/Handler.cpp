@@ -150,6 +150,10 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
         if ( !s_active || strlen( crashReporter ) == 0 )
             return false;
 
+        const char* linuxBacktracePath = static_cast<Handler*>(context)->linuxBacktracePathChar();
+        if ( strlen( linuxBacktracePath ) == 0 )
+            return false;
+
         pid_t pid = fork();
         if ( pid == -1 ) // fork failed
             return false;
@@ -159,6 +163,7 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
             execl( crashReporter,
                    crashReporter,
                    path,
+                   linuxBacktracePath,
                    (char*) 0 );
 
             // execl replaces this process, so no more code will be executed
@@ -229,6 +234,13 @@ LinuxBacktraceParser( const void* crash_context, size_t crash_context_size, void
             out << gen->backtrace();
             out.flush();
             qDebug() << "GDB backtrace written to" << btPath;
+
+            // Cache backtrace file path as C string
+            char* btPathCString;
+            std::string btPathStdString = btPath.toStdString();
+            btPathCString = new char[ btPathStdString.size() + 1 ];
+            strcpy( btPathCString, btPathStdString.c_str() );
+            static_cast<Handler*>(context)->m_linuxBacktracePathChar = btPathCString;
         }
         else
             qDebug() << "Cannot open file" << btPath << "to save the backtrace.";
