@@ -143,16 +143,39 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
         if ( !s_active || strlen( crashReporter ) == 0 )
             return false;
 
+        const char* applicationName = static_cast<Handler*>(context)->applicationName();
+        if ( strlen( applicationName ) == 0 )
+            return false;
+        const char* executablePath = static_cast<Handler*>(context)->executablePath();
+        if ( strlen( executablePath ) == 0 )
+            return false;
+        const char* applicationVersion = static_cast<Handler*>(context)->applicationVersion();
+        if ( strlen( applicationVersion ) == 0 )
+            return false;
+
         pid_t pid = fork();
         if ( pid == -1 ) // fork failed
             return false;
         if ( pid == 0 )
         {
             // we are the fork
+#ifdef Q_OS_LINUX
+            execl( crashReporter,
+                   crashReporter,
+                   path,
+                   static_cast<Handler*>(context)->pid(),
+                   static_cast<Handler*>(context)->signalNumber(),
+                   applicationName,
+                   executablePath,
+                   applicationVersion,
+                   static_cast<Handler*>(context)->threadId(),
+                   (char*) 0 );
+#else
             execl( crashReporter,
                    crashReporter,
                    path,
                    (char*) 0 );
+#endif
 
             // execl replaces this process, so no more code will be executed
             // unless it failed. If it failed, then we should return false.
@@ -182,6 +205,9 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     #endif
 
     setCrashReporter( crashReporter );
+#ifdef Q_OS_LINUX
+    setApplicationData( qApp );
+#endif
 }
 
 
@@ -218,6 +244,38 @@ Handler::setCrashReporter( const QString& crashReporter )
     wcscpy( wreporter, wsreporter.c_str() );
     m_crashReporterWChar = wreporter;
     std::wcout << "m_crashReporterWChar: " << m_crashReporterWChar;
+}
+
+
+void
+Handler::setApplicationData( const QCoreApplication* app )
+{
+    m_pid = app->applicationPid();
+
+    char* cappname;
+    std::string sappname = app->applicationName().toStdString();
+    cappname = new char[ sappname.size() + 1 ];
+    strcpy( cappname, sappname.c_str() );
+    m_applicationName = cappname;
+    qDebug() << "m_applicationName: " << m_applicationName;
+
+    char* cepath;
+    std::string sepath = app->applicationName().toStdString();
+    cepath = new char[ sepath.size() + 1 ];
+    strcpy( cepath, sepath.c_str() );
+    m_executablePath = cepath;
+    qDebug() << "m_executablePath: " << m_executablePath;
+
+    char* cappver;
+    std::string sappver = app->applicationName().toStdString();
+    cappver = new char[ sappver.size() + 1 ];
+    strcpy( cappver, sappver.c_str() );
+    m_applicationVersion = cappver;
+    qDebug() << "m_applicationVersion: " << m_applicationVersion;
+
+    // To be set by the handler
+    m_signalNumber = -1;
+    m_threadId = -1;
 }
 
 
