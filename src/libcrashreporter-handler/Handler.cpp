@@ -206,6 +206,12 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
             printf( "Error: Can't launch CrashReporter!\n" );
             return false;
         }
+#ifdef Q_OS_LINUX
+        // If we're running on Linux, we expect that the CrashReporter component will
+        // attach gdb, do its thing and then kill this process, so we hang here for the
+        // time being, on purpose.          -- Teo 3/2016
+        pause();
+#endif
 
         // we called fork()
         return true;
