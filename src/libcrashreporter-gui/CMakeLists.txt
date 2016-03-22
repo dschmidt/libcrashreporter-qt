@@ -1,4 +1,4 @@
-set(crashreporter_SOURCES CrashReporter.cpp)
+set(crashreporter_SOURCES CrashReporter.cpp CrashReporterGzip.cpp)
 set(crashreporter_UI CrashReporter.ui)
 set(crashreporter_RC ../../resources.qrc)
 set(crashreporter_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR} ${QT_INCLUDES})
