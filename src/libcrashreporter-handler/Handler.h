@@ -1,6 +1,7 @@
 /*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -29,6 +30,10 @@ namespace google_breakpad
 namespace CrashReporter
 {
 
+#ifdef Q_OS_LINUX
+static bool GetCrashInfo( const void* crash_context, size_t crash_context_size, void* context );
+#endif
+
 class Handler
 {
     const char* m_crashReporterChar; // yes! It MUST be const char[]
@@ -40,6 +45,8 @@ class Handler
     const char* m_executablePath;
     const char* m_applicationVersion;
     int m_threadId;
+
+    friend bool CrashReporter::GetCrashInfo( const void* crash_context, size_t crash_context_size, void* context );
 #endif
 
 public:

@@ -1,6 +1,7 @@
 /*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -105,6 +106,29 @@ LaunchUploader( const wchar_t* dump_dir, const wchar_t* minidump_id, void* conte
 
 #include <unistd.h>
 
+#ifdef Q_OS_LINUX
+static bool
+GetCrashInfo( const void* crash_context, size_t crash_context_size, void* context )
+{
+    // Don't use the heap here.
+
+    // The callback signature passes the crash context as an opaque object, but from
+    // what I gather from the comments in exception_handler.h, this cast should always
+    // be safe.
+    // We need it for the signal number and thread ID.      -- Teo 3/2016
+    const google_breakpad::ExceptionHandler::CrashContext* cxt =
+        static_cast< const google_breakpad::ExceptionHandler::CrashContext* >( crash_context );
+
+    static_cast< Handler* >( context )->m_signalNumber = cxt->siginfo.si_signo;
+    static_cast< Handler* >( context )->m_threadId = cxt->tid;
+
+    // We always return false so Breakpad will continue with generating the minidump the
+    // usual way. Had we returned true here, to Breakpad it would mean "I'm done with
+    // making the minidump", which is of course not the case here.
+    return false;
+}
+#endif
+
 
 static bool
 #ifdef Q_OS_LINUX
@@ -196,7 +220,14 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     s_active = active;
 
     #if defined Q_OS_LINUX
-    m_crash_handler =  new google_breakpad::ExceptionHandler( google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()), NULL, LaunchUploader, this, true, -1 );
+    m_crash_handler =  new google_breakpad::ExceptionHandler(
+                           google_breakpad::MinidumpDescriptor( dumpFolderPath.toStdString() ),
+                           NULL,
+                           LaunchUploader,
+                           this,
+                           true,
+                           -1 );
+    m_crash_handler->set_crash_handler(GetCrashInfo);
     #elif defined Q_OS_MAC
     m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
