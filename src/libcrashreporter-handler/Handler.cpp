@@ -139,84 +139,83 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
 {
 #endif
 
-        if ( !succeeded )
-        {
-            printf("Could not write crash dump file");
-            return false;
-        }
-
-        // DON'T USE THE HEAP!!!
-        // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
-
-    #ifdef Q_OS_LINUX
-        const char* path = descriptor.path();
-    #else // Q_OS_MAC
-        const char* extension = "dmp";
-
-        char path[4096];
-        strcpy(path, dump_dir);
-        strcat(path, "/");
-        strcat(path, minidump_id);
-        strcat(path, ".");
-        strcat(path,  extension);
-    #endif
-
-        printf("Dump file was written to: %s\n", path);
-
-        const char* crashReporter = static_cast<Handler*>(context)->crashReporterChar();
-        if ( !s_active || strlen( crashReporter ) == 0 )
-            return false;
-
-        const char* applicationName = static_cast<Handler*>(context)->applicationName();
-        if ( strlen( applicationName ) == 0 )
-            return false;
-        const char* executablePath = static_cast<Handler*>(context)->executablePath();
-        if ( strlen( executablePath ) == 0 )
-            return false;
-        const char* applicationVersion = static_cast<Handler*>(context)->applicationVersion();
-        if ( strlen( applicationVersion ) == 0 )
-            return false;
-
-        pid_t pid = fork();
-        if ( pid == -1 ) // fork failed
-            return false;
-        if ( pid == 0 )
-        {
-            // we are the fork
-#ifdef Q_OS_LINUX
-            execl( crashReporter,
-                   crashReporter,
-                   path,
-                   static_cast<Handler*>(context)->pid(),
-                   static_cast<Handler*>(context)->signalNumber(),
-                   applicationName,
-                   executablePath,
-                   applicationVersion,
-                   static_cast<Handler*>(context)->threadId(),
-                   (char*) 0 );
-#else
-            execl( crashReporter,
-                   crashReporter,
-                   path,
-                   (char*) 0 );
-#endif
-
-            // execl replaces this process, so no more code will be executed
-            // unless it failed. If it failed, then we should return false.
-            printf( "Error: Can't launch CrashReporter!\n" );
-            return false;
-        }
-#ifdef Q_OS_LINUX
-        // If we're running on Linux, we expect that the CrashReporter component will
-        // attach gdb, do its thing and then kill this process, so we hang here for the
-        // time being, on purpose.          -- Teo 3/2016
-        pause();
-#endif
-
-        // we called fork()
-        return true;
+    if ( !succeeded )
+    {
+        printf("Could not write crash dump file");
+        return false;
     }
 
+    // DON'T USE THE HEAP!!!
+    // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
+
+#ifdef Q_OS_LINUX
+    const char* path = descriptor.path();
+#else // Q_OS_MAC
+    const char* extension = "dmp";
+
+    char path[4096];
+    strcpy(path, dump_dir);
+    strcat(path, "/");
+    strcat(path, minidump_id);
+    strcat(path, ".");
+    strcat(path,  extension);
+#endif
+
+    printf("Dump file was written to: %s\n", path);
+
+    const char* crashReporter = static_cast<Handler*>(context)->crashReporterChar();
+    if ( !s_active || strlen( crashReporter ) == 0 )
+        return false;
+
+    const char* applicationName = static_cast<Handler*>(context)->applicationName();
+    if ( strlen( applicationName ) == 0 )
+        return false;
+    const char* executablePath = static_cast<Handler*>(context)->executablePath();
+    if ( strlen( executablePath ) == 0 )
+        return false;
+    const char* applicationVersion = static_cast<Handler*>(context)->applicationVersion();
+    if ( strlen( applicationVersion ) == 0 )
+        return false;
+
+    pid_t pid = fork();
+    if ( pid == -1 ) // fork failed
+        return false;
+    if ( pid == 0 )
+    {
+        // we are the fork
+#ifdef Q_OS_LINUX
+        execl( crashReporter,
+               crashReporter,
+               path,
+               static_cast<Handler*>(context)->pid(),
+               static_cast<Handler*>(context)->signalNumber(),
+               applicationName,
+               executablePath,
+               applicationVersion,
+               static_cast<Handler*>(context)->threadId(),
+               (char*) 0 );
+#else
+        execl( crashReporter,
+               crashReporter,
+               path,
+               (char*) 0 );
+#endif
+
+        // execl replaces this process, so no more code will be executed
+        // unless it failed. If it failed, then we should return false.
+        printf( "Error: Can't launch CrashReporter!\n" );
+        return false;
+    }
+#ifdef Q_OS_LINUX
+    // If we're running on Linux, we expect that the CrashReporter component will
+    // attach gdb, do its thing and then kill this process, so we hang here for the
+    // time being, on purpose.          -- Teo 3/2016
+    pause();
+#endif
+
+    // we called fork()
+    return true;
+}
 
 #endif
 
