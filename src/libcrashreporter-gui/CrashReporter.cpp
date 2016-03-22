@@ -1,6 +1,7 @@
 /* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
  *
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   Tomahawk is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,11 +19,18 @@
 
 #include "CrashReporter.h"
 
+#ifdef Q_OS_LINUX
+#include "linux-backtrace-generator/backtracegenerator.h"
+#include "linux-backtrace-generator/crashedapplication.h"
+#include "CrashReporterGzip.h"
+#endif
+
 #include <QIcon>
 #include <QDebug>
 #include <QTimer>
 #include <QDir>
 #include <QDateTime>
+#include <QStandardPaths>
 
 // #include "utils/TomahawkUtils.h"
 
@@ -72,6 +80,66 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
 
     adjustSize();
     setFixedSize( size() );
+
+#ifdef Q_OS_LINUX
+    if ( args.count() == 8 )
+    {
+        qDebug() << "These are all our args:" << args.join( ", " );
+        const CrashedApplication* app =
+            new CrashedApplication( args.value( 2 ).toInt(),
+                                    args.value( 3 ).toInt(),
+                                    args.value( 4 ),
+                                    QFileInfo( args.value( 5 ) ),
+                                    QFileInfo( args.value( 5 ) ).baseName(),
+                                    args.value( 6 ),
+                                    args.value( 7 ).toInt(),
+                                    QDateTime::currentDateTime() );
+
+        m_btg = new BacktraceGenerator(
+                    Debugger::availableInternalDebuggers( "KCrash" ).first(),
+                    app,
+                    this );
+        connect( m_btg, &BacktraceGenerator::failedToStart,
+                 this, []
+        {
+            qDebug() << "Error: GDB failed to start.";
+        } );
+        connect( m_btg, &BacktraceGenerator::someError,
+                 this, []
+        {
+            qDebug() << "Error: GDB backtrace processing failed.";
+        } );
+        connect( m_btg, &BacktraceGenerator::done,
+                 this, [ = ]
+        {
+            qDebug() << "Backtrace generation done.";
+            Q_ASSERT( m_btg->state() == BacktraceGenerator::Loaded );
+
+            QString btPath = QString( "%1%2calamares-gdb-%3.txt" )
+                             .arg( QStandardPaths::writableLocation( QStandardPaths::TempLocation ) )
+                             .arg( QDir::separator() )
+                             .arg( QDateTime::currentMSecsSinceEpoch() );
+            QFile btFile( btPath );
+            if ( btFile.open( QFile::WriteOnly | QFile::Text ) )
+            {
+                QTextStream out( &btFile );
+                out << m_btg->backtrace();
+                out.flush();
+                qDebug() << "GDB backtrace written to" << btPath;
+
+                setReportData( "upload_file_linux_backtrace",
+                                gzip_compress( m_btg->backtrace().toLocal8Bit() ),
+                                "application/x-gzip",
+                                QFileInfo( btFile ).fileName().toUtf8() );
+            }
+            else
+                qDebug() << "Cannot open file" << btPath << "to save the backtrace.";
+
+        });
+
+        m_btg->start();
+    }
+#endif
 }
 
 
