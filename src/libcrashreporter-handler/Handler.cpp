@@ -35,6 +35,7 @@
 #elif defined __linux__
 #   include <client/linux/handler/exception_handler.h>
 #   include <client/linux/handler/minidump_descriptor.h>
+#   include <cstdio>
 #endif
 
 namespace CrashReporter
@@ -167,6 +168,7 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
     if ( !s_active || strlen( crashReporter ) == 0 )
         return false;
 
+#ifdef Q_OS_LINUX
     const char* applicationName = static_cast<Handler*>(context)->applicationName();
     if ( strlen( applicationName ) == 0 )
         return false;
@@ -176,6 +178,14 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
     const char* applicationVersion = static_cast<Handler*>(context)->applicationVersion();
     if ( strlen( applicationVersion ) == 0 )
         return false;
+
+    char procid[17];
+    sprintf( procid, "%d", static_cast<Handler*>(context)->pid() );
+    char signum[17];
+    sprintf( signum, "%d", static_cast<Handler*>(context)->signalNumber() );
+    char tid[17];
+    sprintf( tid, "%d", static_cast<Handler*>(context)->threadId() );
+#endif
 
     pid_t pid = fork();
     if ( pid == -1 ) // fork failed
@@ -187,12 +197,12 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
         execl( crashReporter,
                crashReporter,
                path,
-               static_cast<Handler*>(context)->pid(),
-               static_cast<Handler*>(context)->signalNumber(),
+               procid,
+               signum,
                applicationName,
                executablePath,
                applicationVersion,
-               static_cast<Handler*>(context)->threadId(),
+               tid,
                (char*) 0 );
 #else
         execl( crashReporter,
@@ -296,14 +306,14 @@ Handler::setApplicationData( const QCoreApplication* app )
     qDebug() << "m_applicationName: " << m_applicationName;
 
     char* cepath;
-    std::string sepath = app->applicationName().toStdString();
+    std::string sepath = app->applicationFilePath().toStdString();
     cepath = new char[ sepath.size() + 1 ];
     strcpy( cepath, sepath.c_str() );
     m_executablePath = cepath;
     qDebug() << "m_executablePath: " << m_executablePath;
 
     char* cappver;
-    std::string sappver = app->applicationName().toStdString();
+    std::string sappver = app->applicationVersion().toStdString();
     cappver = new char[ sappver.size() + 1 ];
     strcpy( cappver, sappver.c_str() );
     m_applicationVersion = cappver;
