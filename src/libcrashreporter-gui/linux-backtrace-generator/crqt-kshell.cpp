@@ -21,7 +21,6 @@
 
 #include "crqt-kshell.h"
 #include "crqt-kshell_p.h"
-#include "kuser.h"
 
 #include <QtCore/QDir>
 
