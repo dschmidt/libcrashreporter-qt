@@ -1,4 +1,3 @@
-set(CMAKE_AUTOMOC 1)
 list(APPEND drkonqi_backtrace_parser_INCLUDE_DIRECTORIES
     ${QT_QTCORE_INCLUDE_DIR}
 )
@@ -18,4 +17,5 @@ target_link_libraries(drkonqi_backtrace_parser
     PUBLIC
         Qt5::Core
 )
+set_target_properties(drkonqi_backtrace_parser PROPERTIES AUTOMOC ON)
 qt5_use_modules(drkonqi_backtrace_parser Core)
