@@ -303,21 +303,18 @@ Handler::setApplicationData( const QCoreApplication* app )
     cappname = new char[ sappname.size() + 1 ];
     strcpy( cappname, sappname.c_str() );
     m_applicationName = cappname;
-    qDebug() << "m_applicationName: " << m_applicationName;
 
     char* cepath;
     std::string sepath = app->applicationFilePath().toStdString();
     cepath = new char[ sepath.size() + 1 ];
     strcpy( cepath, sepath.c_str() );
     m_executablePath = cepath;
-    qDebug() << "m_executablePath: " << m_executablePath;
 
     char* cappver;
     std::string sappver = app->applicationVersion().toStdString();
     cappver = new char[ sappver.size() + 1 ];
     strcpy( cappver, sappver.c_str() );
     m_applicationVersion = cappver;
-    qDebug() << "m_applicationVersion: " << m_applicationVersion;
 
     // To be set by the handler
     m_signalNumber = -1;
