@@ -23,6 +23,7 @@
 #include "linux-backtrace-generator/backtracegenerator.h"
 #include "linux-backtrace-generator/crashedapplication.h"
 #include "CrashReporterGzip.h"
+#include <csignal> // POSIX kill
 #endif
 
 #include <QIcon>
@@ -73,9 +74,9 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
     m_minidump_file_path = args.value( 1 );
 
     //hide until "send report" has been clicked
-    m_ui->progressBar->setVisible( false );
-    m_ui->button->setVisible( false );
-    m_ui->progressLabel->setVisible( false );
+    m_ui->progressBox->setVisible( false );
+    m_ui->progressLabel->setVisible( true );
+    m_ui->progressLabel->setText( QString() );
     connect( m_ui->sendButton, SIGNAL( clicked() ), SLOT( onSendButton() ) );
 
     adjustSize();
@@ -100,14 +101,18 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
                     app,
                     this );
         connect( m_btg, &BacktraceGenerator::failedToStart,
-                 this, []
+                 this, [ = ]
         {
             qDebug() << "Error: GDB failed to start.";
+            m_ui->progressLabel->setText( tr( "We cannot gather useful debug information on your system." ) );
+            m_ui->button->setText( tr( "Close" ) );
         } );
         connect( m_btg, &BacktraceGenerator::someError,
-                 this, []
+                 this, [ = ]
         {
             qDebug() << "Error: GDB backtrace processing failed.";
+            m_ui->progressLabel->setText( tr( "We cannot gather useful debug information on your system." ) );
+            m_ui->button->setText( tr( "Close" ) );
         } );
         connect( m_btg, &BacktraceGenerator::done,
                  this, [ = ]
@@ -131,13 +136,28 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
                                 gzip_compress( m_btg->backtrace().toLocal8Bit() ),
                                 "application/x-gzip",
                                 QFileInfo( btFile ).fileName().toUtf8() );
+                kill( app->pid(), SIGKILL );
+
+                m_ui->progressBox->setVisible( false );
+                m_ui->sendBox->setVisible( true );
+                m_ui->progressLabel->setText( tr( "Ready to send debug information (<a "
+                                                  "href=\"%1\">view backtrace</a>)." )
+                                              .arg( QUrl::fromLocalFile( btPath ).toString( QUrl::FullyEncoded ) ) );
             }
             else
+            {
                 qDebug() << "Cannot open file" << btPath << "to save the backtrace.";
-
+                m_ui->progressLabel->setText( tr( "We cannot gather useful debug information on your system." ) );
+                m_ui->button->setText( tr( "Close" ) );
+            }
         });
 
         m_btg->start();
+        m_ui->progressBox->setVisible( true );
+        m_ui->sendBox->setVisible( false );
+
+        m_ui->progressLabel->setText( tr( "Gathering debug information..." ) );
+        m_ui->progressBar->setRange( 0, 0 );
     }
 #endif
 }
@@ -161,6 +181,9 @@ void
 CrashReporter::setText( const QString& text )
 {
     m_ui->topLabel->setText(text);
+    m_ui->topLabel->updateGeometry();
+    adjustSize();
+    resize( size() );
 }
 
 void
@@ -252,6 +275,7 @@ CrashReporter::onDone()
     m_ui->button->setText( tr( "Close" ) );
 
     QString const response = QString::fromUtf8( data );
+    qDebug() << "RESPONSE:" << response;
 
     if ( ( m_reply->error() != QNetworkReply::NoError ) || !response.startsWith( "CrashID=" ) )
     {
@@ -278,11 +302,9 @@ CrashReporter::onFail( int error, const QString& errorString )
 void
 CrashReporter::onSendButton()
 {
-    m_ui->progressBar->setVisible( true );
-    m_ui->button->setVisible( true );
-    m_ui->progressLabel->setVisible( true );
-    m_ui->sendButton->setEnabled( false );
-    m_ui->dontSendButton->setEnabled( false );
+    m_ui->progressBox->setVisible( true );
+    m_ui->sendBox->setVisible( false );
+
     m_ui->commentTextEdit->setEnabled( false );
 
     setReportData( "Comments", m_ui->commentTextEdit->toPlainText().toUtf8() );
