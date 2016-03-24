@@ -75,7 +75,7 @@ endif()
 include_directories(.)
 # ADD_DEFINITIONS( -fPIC )
 add_library(crashreporter-breakpad STATIC ${breakpadSources} )
-# TARGET_LINK_LIBRARIES( tomahawk-breakpad )
+target_link_libraries(crashreporter-breakpad pthread)
 
 if(WIN32)
     target_link_libraries(crashreporter-breakpad "mingwex")
