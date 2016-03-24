@@ -181,9 +181,6 @@ void
 CrashReporter::setText( const QString& text )
 {
     m_ui->topLabel->setText(text);
-    m_ui->topLabel->updateGeometry();
-    adjustSize();
-    resize( size() );
 }
 
 void
