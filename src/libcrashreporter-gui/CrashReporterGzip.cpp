@@ -19,6 +19,7 @@
 
 #include "CrashReporterGzip.h"
 
+#include <numeric>
 
 // code taken from http://stackoverflow.com/questions/20734831/compress-string-with-gzip-using-qcompress
 static const quint32 crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
