@@ -1,6 +1,7 @@
 /* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
  *
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   Tomahawk is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,11 +19,19 @@
 
 #include "CrashReporter.h"
 
+#ifdef Q_OS_LINUX
+#include "linux-backtrace-generator/backtracegenerator.h"
+#include "linux-backtrace-generator/crashedapplication.h"
+#include "CrashReporterGzip.h"
+#include <csignal> // POSIX kill
+#endif
+
 #include <QIcon>
 #include <QDebug>
 #include <QTimer>
 #include <QDir>
 #include <QDateTime>
+#include <QStandardPaths>
 
 // #include "utils/TomahawkUtils.h"
 
@@ -65,13 +74,92 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
     m_minidump_file_path = args.value( 1 );
 
     //hide until "send report" has been clicked
-    m_ui->progressBar->setVisible( false );
-    m_ui->button->setVisible( false );
-    m_ui->progressLabel->setVisible( false );
+    m_ui->progressBox->setVisible( false );
+    m_ui->progressLabel->setVisible( true );
+    m_ui->progressLabel->setText( QString() );
     connect( m_ui->sendButton, SIGNAL( clicked() ), SLOT( onSendButton() ) );
 
     adjustSize();
     setFixedSize( size() );
+
+#ifdef Q_OS_LINUX
+    if ( args.count() == 8 )
+    {
+        qDebug() << "These are all our args:" << args.join( ", " );
+        const CrashedApplication* app =
+            new CrashedApplication( args.value( 2 ).toInt(),
+                                    args.value( 3 ).toInt(),
+                                    args.value( 4 ),
+                                    QFileInfo( args.value( 5 ) ),
+                                    QFileInfo( args.value( 5 ) ).baseName(),
+                                    args.value( 6 ),
+                                    args.value( 7 ).toInt(),
+                                    QDateTime::currentDateTime() );
+
+        m_btg = new BacktraceGenerator(
+                    Debugger::availableInternalDebuggers( "KCrash" ).first(),
+                    app,
+                    this );
+        connect( m_btg, &BacktraceGenerator::failedToStart,
+                 this, [ = ]
+        {
+            qDebug() << "Error: GDB failed to start.";
+            m_ui->progressLabel->setText( tr( "We cannot gather useful debug information on your system." ) );
+            m_ui->button->setText( tr( "Close" ) );
+        } );
+        connect( m_btg, &BacktraceGenerator::someError,
+                 this, [ = ]
+        {
+            qDebug() << "Error: GDB backtrace processing failed.";
+            m_ui->progressLabel->setText( tr( "We cannot gather useful debug information on your system." ) );
+            m_ui->button->setText( tr( "Close" ) );
+        } );
+        connect( m_btg, &BacktraceGenerator::done,
+                 this, [ = ]
+        {
+            qDebug() << "Backtrace generation done.";
+            Q_ASSERT( m_btg->state() == BacktraceGenerator::Loaded );
+
+            QString btPath = QString( "%1%2calamares-gdb-%3.txt" )
+                             .arg( QStandardPaths::writableLocation( QStandardPaths::TempLocation ) )
+                             .arg( QDir::separator() )
+                             .arg( QDateTime::currentMSecsSinceEpoch() );
+            QFile btFile( btPath );
+            if ( btFile.open( QFile::WriteOnly | QFile::Text ) )
+            {
+                QTextStream out( &btFile );
+                out << m_btg->backtrace();
+                out.flush();
+                qDebug() << "GDB backtrace written to" << btPath;
+
+                setReportData( "upload_file_linux_backtrace",
+                                gzip_compress( m_btg->backtrace().toLocal8Bit() ),
+                                "application/x-gzip",
+                                QFileInfo( btFile ).fileName().toUtf8() );
+                kill( app->pid(), SIGKILL );
+
+                m_ui->progressBox->setVisible( false );
+                m_ui->sendBox->setVisible( true );
+                m_ui->progressLabel->setText( tr( "Ready to send debug information (<a "
+                                                  "href=\"%1\">view backtrace</a>)." )
+                                              .arg( QUrl::fromLocalFile( btPath ).toString( QUrl::FullyEncoded ) ) );
+            }
+            else
+            {
+                qDebug() << "Cannot open file" << btPath << "to save the backtrace.";
+                m_ui->progressLabel->setText( tr( "We cannot gather useful debug information on your system." ) );
+                m_ui->button->setText( tr( "Close" ) );
+            }
+        });
+
+        m_btg->start();
+        m_ui->progressBox->setVisible( true );
+        m_ui->sendBox->setVisible( false );
+
+        m_ui->progressLabel->setText( tr( "Gathering debug information..." ) );
+        m_ui->progressBar->setRange( 0, 0 );
+    }
+#endif
 }
 
 
@@ -184,6 +272,7 @@ CrashReporter::onDone()
     m_ui->button->setText( tr( "Close" ) );
 
     QString const response = QString::fromUtf8( data );
+    qDebug() << "RESPONSE:" << response;
 
     if ( ( m_reply->error() != QNetworkReply::NoError ) || !response.startsWith( "CrashID=" ) )
     {
@@ -210,11 +299,9 @@ CrashReporter::onFail( int error, const QString& errorString )
 void
 CrashReporter::onSendButton()
 {
-    m_ui->progressBar->setVisible( true );
-    m_ui->button->setVisible( true );
-    m_ui->progressLabel->setVisible( true );
-    m_ui->sendButton->setEnabled( false );
-    m_ui->dontSendButton->setEnabled( false );
+    m_ui->progressBox->setVisible( true );
+    m_ui->sendBox->setVisible( false );
+
     m_ui->commentTextEdit->setEnabled( false );
 
     setReportData( "Comments", m_ui->commentTextEdit->toPlainText().toUtf8() );

@@ -1,6 +1,7 @@
 /*
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
  *   Copyright 2014,      Dominik Schmidt <domme@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   libcrashreporter is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -34,6 +35,7 @@
 #elif defined __linux__
 #   include <client/linux/handler/exception_handler.h>
 #   include <client/linux/handler/minidump_descriptor.h>
+#   include <cstdio>
 #endif
 
 namespace CrashReporter
@@ -105,6 +107,29 @@ LaunchUploader( const wchar_t* dump_dir, const wchar_t* minidump_id, void* conte
 
 #include <unistd.h>
 
+#ifdef Q_OS_LINUX
+static bool
+GetCrashInfo( const void* crash_context, size_t crash_context_size, void* context )
+{
+    // Don't use the heap here.
+
+    // The callback signature passes the crash context as an opaque object, but from
+    // what I gather from the comments in exception_handler.h, this cast should always
+    // be safe.
+    // We need it for the signal number and thread ID.      -- Teo 3/2016
+    const google_breakpad::ExceptionHandler::CrashContext* cxt =
+        static_cast< const google_breakpad::ExceptionHandler::CrashContext* >( crash_context );
+
+    static_cast< Handler* >( context )->m_signalNumber = cxt->siginfo.si_signo;
+    static_cast< Handler* >( context )->m_threadId = cxt->tid;
+
+    // We always return false so Breakpad will continue with generating the minidump the
+    // usual way. Had we returned true here, to Breakpad it would mean "I'm done with
+    // making the minidump", which is of course not the case here.
+    return false;
+}
+#endif
+
 
 static bool
 #ifdef Q_OS_LINUX
@@ -115,55 +140,92 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
 {
 #endif
 
-        if ( !succeeded )
-        {
-            printf("Could not write crash dump file");
-            return false;
-        }
-
-        // DON'T USE THE HEAP!!!
-        // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
-
-    #ifdef Q_OS_LINUX
-        const char* path = descriptor.path();
-    #else // Q_OS_MAC
-        const char* extension = "dmp";
-
-        char path[4096];
-        strcpy(path, dump_dir);
-        strcat(path, "/");
-        strcat(path, minidump_id);
-        strcat(path, ".");
-        strcat(path,  extension);
-    #endif
-
-        printf("Dump file was written to: %s\n", path);
-
-        const char* crashReporter = static_cast<Handler*>(context)->crashReporterChar();
-        if ( !s_active || strlen( crashReporter ) == 0 )
-            return false;
-
-        pid_t pid = fork();
-        if ( pid == -1 ) // fork failed
-            return false;
-        if ( pid == 0 )
-        {
-            // we are the fork
-            execl( crashReporter,
-                   crashReporter,
-                   path,
-                   (char*) 0 );
-
-            // execl replaces this process, so no more code will be executed
-            // unless it failed. If it failed, then we should return false.
-            printf( "Error: Can't launch CrashReporter!\n" );
-            return false;
-        }
-
-        // we called fork()
-        return true;
+    if ( !succeeded )
+    {
+        printf("Could not write crash dump file");
+        return false;
     }
 
+    // DON'T USE THE HEAP!!!
+    // So that indeed means, no QStrings, no qDebug(), no QAnything, seriously!
+
+#ifdef Q_OS_LINUX
+    const char* path = descriptor.path();
+#else // Q_OS_MAC
+    const char* extension = "dmp";
+
+    char path[4096];
+    strcpy(path, dump_dir);
+    strcat(path, "/");
+    strcat(path, minidump_id);
+    strcat(path, ".");
+    strcat(path,  extension);
+#endif
+
+    printf("Dump file was written to: %s\n", path);
+
+    const char* crashReporter = static_cast<Handler*>(context)->crashReporterChar();
+    if ( !s_active || strlen( crashReporter ) == 0 )
+        return false;
+
+#ifdef Q_OS_LINUX
+    const char* applicationName = static_cast<Handler*>(context)->applicationName();
+    if ( strlen( applicationName ) == 0 )
+        return false;
+    const char* executablePath = static_cast<Handler*>(context)->executablePath();
+    if ( strlen( executablePath ) == 0 )
+        return false;
+    const char* applicationVersion = static_cast<Handler*>(context)->applicationVersion();
+    if ( strlen( applicationVersion ) == 0 )
+        return false;
+
+    char procid[17];
+    sprintf( procid, "%d", static_cast<Handler*>(context)->pid() );
+    char signum[17];
+    sprintf( signum, "%d", static_cast<Handler*>(context)->signalNumber() );
+    char tid[17];
+    sprintf( tid, "%d", static_cast<Handler*>(context)->threadId() );
+#endif
+
+    pid_t pid = fork();
+    if ( pid == -1 ) // fork failed
+        return false;
+    if ( pid == 0 )
+    {
+        // we are the fork
+#ifdef Q_OS_LINUX
+        execl( crashReporter,
+               crashReporter,
+               path,
+               procid,
+               signum,
+               applicationName,
+               executablePath,
+               applicationVersion,
+               tid,
+               (char*) 0 );
+#else
+        execl( crashReporter,
+               crashReporter,
+               path,
+               (char*) 0 );
+#endif
+
+        // execl replaces this process, so no more code will be executed
+        // unless it failed. If it failed, then we should return false.
+        printf( "Error: Can't launch CrashReporter!\n" );
+        return false;
+    }
+#ifdef Q_OS_LINUX
+    // If we're running on Linux, we expect that the CrashReporter component will
+    // attach gdb, do its thing and then kill this process, so we hang here for the
+    // time being, on purpose.          -- Teo 3/2016
+    pause();
+#endif
+
+    // we called fork()
+    return true;
+}
 
 #endif
 
@@ -173,7 +235,14 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     s_active = active;
 
     #if defined Q_OS_LINUX
-    m_crash_handler =  new google_breakpad::ExceptionHandler( google_breakpad::MinidumpDescriptor(dumpFolderPath.toStdString()), NULL, LaunchUploader, this, true, -1 );
+    m_crash_handler =  new google_breakpad::ExceptionHandler(
+                           google_breakpad::MinidumpDescriptor( dumpFolderPath.toStdString() ),
+                           NULL,
+                           LaunchUploader,
+                           this,
+                           true,
+                           -1 );
+    m_crash_handler->set_crash_handler(GetCrashInfo);
     #elif defined Q_OS_MAC
     m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
@@ -182,6 +251,9 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     #endif
 
     setCrashReporter( crashReporter );
+#ifdef Q_OS_LINUX
+    setApplicationData( qApp );
+#endif
 }
 
 
@@ -218,6 +290,35 @@ Handler::setCrashReporter( const QString& crashReporter )
     wcscpy( wreporter, wsreporter.c_str() );
     m_crashReporterWChar = wreporter;
     std::wcout << "m_crashReporterWChar: " << m_crashReporterWChar;
+}
+
+
+void
+Handler::setApplicationData( const QCoreApplication* app )
+{
+    m_pid = app->applicationPid();
+
+    char* cappname;
+    std::string sappname = app->applicationName().toStdString();
+    cappname = new char[ sappname.size() + 1 ];
+    strcpy( cappname, sappname.c_str() );
+    m_applicationName = cappname;
+
+    char* cepath;
+    std::string sepath = app->applicationFilePath().toStdString();
+    cepath = new char[ sepath.size() + 1 ];
+    strcpy( cepath, sepath.c_str() );
+    m_executablePath = cepath;
+
+    char* cappver;
+    std::string sappver = app->applicationVersion().toStdString();
+    cappver = new char[ sappver.size() + 1 ];
+    strcpy( cappver, sappver.c_str() );
+    m_applicationVersion = cappver;
+
+    // To be set by the handler
+    m_signalNumber = -1;
+    m_threadId = -1;
 }
 
 

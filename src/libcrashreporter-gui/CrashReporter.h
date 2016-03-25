@@ -1,6 +1,7 @@
 /* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
  *
  *   Copyright 2010-2011, Christian Muehlhaeuser <muesli@tomahawk-player.org>
+ *   Copyright 2016,      Teo Mrnjavac <teo@kde.org>
  *
  *   Tomahawk is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -30,6 +31,9 @@ namespace Ui
     class CrashReporter;
 }
 
+#ifdef Q_OS_LINUX
+class BacktraceGenerator;
+#endif
 
 class CrashReporter : public QDialog
 {
@@ -48,6 +52,9 @@ public:
 
 private:
     Ui::CrashReporter* m_ui;
+#ifdef Q_OS_LINUX
+    BacktraceGenerator* m_btg;
+#endif
 
     QString m_minidump_file_path;
     QNetworkRequest* m_request;
