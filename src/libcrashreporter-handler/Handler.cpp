@@ -293,6 +293,7 @@ Handler::setCrashReporter( const QString& crashReporter )
 }
 
 
+#ifdef Q_OS_LINUX
 void
 Handler::setApplicationData( const QCoreApplication* app )
 {
@@ -320,6 +321,7 @@ Handler::setApplicationData( const QCoreApplication* app )
     m_signalNumber = -1;
     m_threadId = -1;
 }
+#endif
 
 
 Handler::~Handler()
