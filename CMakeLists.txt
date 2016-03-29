@@ -2,7 +2,8 @@ project(libcrashreporter-qt)
 cmake_minimum_required(VERSION 2.8.11)
 cmake_policy(SET CMP0020 OLD)
 
-if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS)
+if((CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS) OR
+   (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     # Breakpad uses GNU compiler extensions like typeof.
     # Luckily these features are not used on OSX, so we can build the
     # crashreporter there with the normal C++11 standard.
@@ -12,4 +13,3 @@ endif()
 
 add_subdirectory(3rdparty)
 add_subdirectory(src)
-
