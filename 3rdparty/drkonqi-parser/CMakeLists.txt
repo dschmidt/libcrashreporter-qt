@@ -18,4 +18,3 @@ target_link_libraries(drkonqi_backtrace_parser
         Qt5::Core
 )
 set_target_properties(drkonqi_backtrace_parser PROPERTIES AUTOMOC ON)
-qt5_use_modules(drkonqi_backtrace_parser Core)

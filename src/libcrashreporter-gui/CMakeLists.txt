@@ -1,7 +1,7 @@
 set(crashreporter_SOURCES CrashReporter.cpp CrashReporterGzip.cpp)
 set(crashreporter_UI CrashReporter.ui)
 set(crashreporter_RC ../../resources.qrc)
-set(crashreporter_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR} ${QT_INCLUDES})
+set(crashreporter_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR} ${QT_INCLUDES})
 
 
 if(UNIX AND NOT APPLE)
@@ -22,9 +22,7 @@ list(APPEND crashreporter_SOURCES
 )
 endif()
 
-qt_wrap_ui( crashreporter_UI_HEADERS ${crashreporter_UI} )
-
-include_directories( ${crashreporter_INCLUDE_DIRECTORIES} )
+qt5_wrap_ui(crashreporter_UI_HEADERS ${crashreporter_UI})
 
 add_library(crashreporter-gui STATIC
     ${crashreporter_SOURCES}
@@ -33,6 +31,7 @@ add_library(crashreporter-gui STATIC
     ${crashreporter_RC_RCC}
 )
 
+target_include_directories(crashreporter-gui PUBLIC ${crashreporter_INCLUDE_DIRECTORIES})
 
 target_link_libraries(crashreporter-gui
     ${QT_QTGUI_LIBRARY}
