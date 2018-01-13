@@ -1,6 +1,10 @@
 project(libcrashreporter-qt)
-cmake_minimum_required(VERSION 2.8.11)
-cmake_policy(SET CMP0020 OLD)
+cmake_minimum_required(VERSION 3.1)
+
+if(POLICY CMP0071)
+    cmake_policy(SET CMP0071 NEW)
+endif()
+
 
 if((CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS) OR
    (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
