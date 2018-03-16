@@ -22,8 +22,6 @@ list(APPEND crashreporter_SOURCES
 )
 endif()
 
-qt5_wrap_ui(crashreporter_UI_HEADERS ${crashreporter_UI})
-
 add_library(crashreporter-gui STATIC
     ${crashreporter_SOURCES}
     ${crashreporter_HEADERS_MOC}
@@ -39,6 +37,7 @@ target_link_libraries(crashreporter-gui
     ${crashreporter_LIBRARIES}
 )
 
+set_target_properties(crashreporter-gui PROPERTIES AUTOUIC ON)
 set_target_properties(crashreporter-gui PROPERTIES AUTOMOC ON)
 #install(TARGETS crashreporter-gui
 #    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
