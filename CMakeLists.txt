@@ -5,9 +5,7 @@ if(POLICY CMP0071)
     cmake_policy(SET CMP0071 NEW)
 endif()
 
-if(NOT TARGET Qt5::Core)
-    find_package(Qt5 COMPONENTS Core Network Widgets)
-endif()
+find_package(Qt5 COMPONENTS Core Network Widgets)
 
 if((CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS) OR
    (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
