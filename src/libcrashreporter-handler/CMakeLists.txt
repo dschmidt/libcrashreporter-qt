@@ -16,8 +16,9 @@ list(APPEND crashreporter-handler_LIBRARIES
 
 add_library(crashreporter-handler STATIC ${crashreporter-handler_SOURCES})
 target_include_directories(crashreporter-handler PUBLIC ${crashreporter-handler_INCLUDE_DIRECTORIES})
-target_link_libraries(crashreporter-handler ${crashreporter-handler_LIBRARIES})
-qt5_use_modules(crashreporter-handler Core)
+target_link_libraries(crashreporter-handler
+    ${crashreporter-handler_LIBRARIES}
+    Qt5::Core)
 
 if(WIN32)
     add_definitions( -DUNICODE ) #-fshort-wchar )
