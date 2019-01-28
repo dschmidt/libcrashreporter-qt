@@ -1,2 +1,5 @@
 add_subdirectory(breakpad)
-add_subdirectory(drkonqi-parser)
+
+if(ENABLE_GPL_CODE)
+    add_subdirectory(drkonqi-parser)
+endif()

@@ -4,8 +4,13 @@ libcrashreporter-qt
 This library is supposed to provide an easy integration of Google Breakpad crash reporting into a Qt application
 
 #### Features
-* Cross-platform (Linux and Windows currently, Mac OS X probably slightly broken/WIP)
+* Cross-platform (Linux and Windows currently, macOS)
 * Simple API to launch an external crash reporter GUI
+
+#### License
+
+The library itself is licensed LGPLv2.1, but the drkonqi integration for Linux is licensed GPL.
+If you need the drkonqi integration, you need to use this lib as GPLv2.
 
 #### TODO
 * Add documentation/examples
