@@ -1,8 +1,11 @@
+if(NOT ENABLE_GPL_CODE)
+    message(FATAL_ERROR "Using the Linux build requires ENABLE_GPL_CODE to be true.")
+endif()
+
 set(crashreporter_SOURCES CrashReporter.cpp CrashReporterGzip.cpp)
 set(crashreporter_UI CrashReporter.ui)
 set(crashreporter_RC ../../resources.qrc)
 set(crashreporter_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR} ${QT_INCLUDES})
-
 
 if(UNIX AND NOT APPLE)
 list(APPEND crashreporter_INCLUDE_DIRECTORIES

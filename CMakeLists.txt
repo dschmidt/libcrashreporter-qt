@@ -5,6 +5,8 @@ if(POLICY CMP0071)
     cmake_policy(SET CMP0071 NEW)
 endif()
 
+option(ENABLE_GPL_CODE OFF)
+
 find_package(Qt5 COMPONENTS Core Network Widgets)
 
 if((CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS) OR
