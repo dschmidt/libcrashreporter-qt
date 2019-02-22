@@ -249,7 +249,7 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
 //     m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), 0, LaunchUploader, this, true, 0 );
-    m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdWString(), 0, LaunchUploader, this, true, 0 );
+    m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdWString(), 0, LaunchUploader, this, google_breakpad::ExceptionHandler::HANDLER_ALL );
     #endif
 
     setCrashReporter( crashReporter );
