@@ -233,7 +233,7 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
         printf( "Error: Can't launch CrashReporter!\n" );
         return false;
     }
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_LINUX) && defined(ENABLE_CRASH_REPORTER)
     // If we're running on Linux, we expect that the CrashReporter component will
     // attach gdb, do its thing and then kill this process, so we hang here for the
     // time being, on purpose.          -- Teo 3/2016
@@ -264,7 +264,7 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
 //     m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), 0, LaunchUploader, this, true, 0 );
-    m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdWString(), 0, LaunchUploader, this, true, 0 );
+    m_crash_handler = new google_breakpad::ExceptionHandler( dumpFolderPath.toStdWString(), 0, LaunchUploader, this, google_breakpad::ExceptionHandler::HANDLER_ALL );
     #endif
 
     setCrashReporter( crashReporter );

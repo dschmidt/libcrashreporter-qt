@@ -1,2 +1,5 @@
 add_subdirectory(libcrashreporter-handler)
-add_subdirectory(libcrashreporter-gui)
+
+if (ENABLE_CRASH_REPORTER)
+    add_subdirectory(libcrashreporter-gui)
+endif(ENABLE_CRASH_REPORTER)
