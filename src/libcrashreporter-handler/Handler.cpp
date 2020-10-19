@@ -23,6 +23,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 
 #include <QCoreApplication>
 #include <QFileInfo>
@@ -39,6 +40,20 @@
 #   include <client/linux/handler/minidump_descriptor.h>
 #   include <cstdio>
 #endif
+
+namespace {
+void logWindows(const std::vector<const wchar_t*> &msg) {
+#ifdef Q_OS_WIN
+    std::wstringstream out;
+    for (const auto s : msg) {
+        out << s;
+    }
+    OutputDebugStringW(out.str().data());
+#else
+    Q_UNUSED(msg);
+#endif
+}
+}
 
 namespace CrashReporter
 {
@@ -291,7 +306,7 @@ Handler::setCrashReporter( const QString& crashReporter )
     wreporter = new wchar_t[ wsreporter.size() + 10 ];
     wcscpy( wreporter, wsreporter.c_str() );
     m_crashReporterWChar = wreporter;
-    std::wcout << "m_crashReporterWChar: " << m_crashReporterWChar;
+    logWindows({L"m_crashReporterWChar: ",  m_crashReporterWChar});
 }
 
 
