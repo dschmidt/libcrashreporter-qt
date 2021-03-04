@@ -186,6 +186,12 @@ CrashReporter::setText( const QString& text )
 }
 
 void
+CrashReporter::setComment( const QString &text )
+{
+    m_ui->commentTextEdit->setPlainText(text);
+}
+
+void
 CrashReporter::setBottomText( const QString& text )
 {
     m_ui->bottomLabel->setText(text);

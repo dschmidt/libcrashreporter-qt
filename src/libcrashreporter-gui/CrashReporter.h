@@ -47,6 +47,7 @@ public:
 
     void setLogo(const QPixmap& logo);
     void setText(const QString& text);
+    void setComment(const QString& text);
     void setBottomText(const QString& text);
 
     void setReportData(const QByteArray& name, const QByteArray& content);
