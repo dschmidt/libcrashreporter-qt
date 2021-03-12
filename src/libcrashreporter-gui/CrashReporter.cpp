@@ -34,6 +34,9 @@
 #include <QDir>
 #include <QDateTime>
 #include <QStandardPaths>
+#include <QClipboard>
+#include <QApplication>
+#include <QLabel>
 
 // #include "utils/TomahawkUtils.h"
 
@@ -162,6 +165,10 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
         m_ui->progressBar->setRange( 0, 0 );
     }
 #endif
+
+    // set up handler for clicked the link in the label that is used to let the user copy the crash ID easily
+    m_ui->progressLabel->setOpenExternalLinks(false);
+    connect(m_ui->progressLabel, &QLabel::linkActivated, this, &CrashReporter::onLinkClicked);
 }
 
 
@@ -290,7 +297,7 @@ CrashReporter::onDone()
     {
         QString crashId = response.split("\n").at(0).split("=").at(1);
 
-        m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>. Please refer to crash <b>%1</b> in bug reports." ).arg(crashId) );
+        m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>. Please refer to crash <a href=\"clipboard://%1\"><b>%1</b></a> (click to copy) in bug reports." ).arg(crashId) );
     }
 }
 
@@ -334,5 +341,18 @@ CrashReporter::setReportData(const QByteArray& name, const QByteArray& content, 
     {
         m_formContentTypes.insert( name, contentType );
         m_formFileNames.insert( name, fileName );
+    }
+}
+
+void
+CrashReporter::onLinkClicked(const QString& link)
+{
+    // we just have to handle clipboard "links", used to let the user copy the crash ID easily
+    // other links can be ignored
+    static const QString clipboardPrefix = "clipboard://";
+
+    if (link.startsWith(clipboardPrefix)) {
+        QString toCopyIntoClipboard = link.mid(clipboardPrefix.length());
+        QApplication::clipboard()->setText(toCopyIntoClipboard);
     }
 }

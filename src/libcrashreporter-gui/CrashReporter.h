@@ -77,6 +77,7 @@ private slots:
     void onProgress( qint64 done, qint64 total );
     void onFail( int error, const QString& errorString );
     void onSendButton();
+    void onLinkClicked(const QString& link);
 };
 
 #endif // CRASHREPORTER_H
