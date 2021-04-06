@@ -5,6 +5,10 @@ if(POLICY CMP0071)
     cmake_policy(SET CMP0071 NEW)
 endif()
 
+if(POLICY CMP0063)
+    cmake_policy(SET CMP0063 NEW)
+endif()
+
 option(ENABLE_GPL_CODE "Enable GPL-licensed depencencies of libcrashreporter-qt (dr.konqui integration)" OFF)
 option(ENABLE_CRASH_REPORTER "Enable libcrashreporter-qt GUI component" ON)
 
