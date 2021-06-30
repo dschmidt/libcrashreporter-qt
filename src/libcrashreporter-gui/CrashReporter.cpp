@@ -227,16 +227,16 @@ CrashReporter::send()
 
 
     QByteArray body;
-    foreach (const QByteArray& name, m_formContents.keys() )
+    for(auto it = m_formContents.cbegin(); it != m_formContents.cend(); ++it)
     {
         body += "--thkboundary\r\n";
 
-        body += "Content-Disposition: form-data; name=\"" + name + "\"";
+        body += "Content-Disposition: form-data; name=\"" + it.key() + "\"";
 
-        if ( !m_formFileNames.value( name ).isEmpty() && !m_formContentTypes.value( name ).isEmpty() )
+        if ( !m_formFileNames.value( it.key() ).isEmpty() && !m_formContentTypes.value( it.key() ).isEmpty() )
         {
-            body += "; filename=\"" + m_formFileNames.value( name ) + "\"\r\n";
-            body += "Content-Type: " + m_formContentTypes.value( name ) + "\r\n";
+            body += "; filename=\"" + m_formFileNames.value( it.key() ) + "\"\r\n";
+            body += "Content-Type: " + m_formContentTypes.value( it.key() ) + "\r\n";
         }
         else
         {
@@ -245,7 +245,7 @@ CrashReporter::send()
 
         body += "\r\n";
 
-        body += m_formContents.value( name ) + "\r\n";
+        body += it.value() + "\r\n";
     }
 
     body += "--thkboundary\r\n";

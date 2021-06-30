@@ -13,6 +13,9 @@ option(ENABLE_GPL_CODE "Enable GPL-licensed depencencies of libcrashreporter-qt 
 option(ENABLE_CRASH_REPORTER "Enable libcrashreporter-qt GUI component" ON)
 
 find_package(Qt5 COMPONENTS Core Network Widgets)
+add_definitions(
+    -DQT_NO_FOREACH
+)
 
 if((CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_FLAGS) OR
    (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
