@@ -33,7 +33,7 @@ namespace Ui
     class CrashReporter;
 }
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
 class BacktraceGenerator;
 #endif
 
@@ -55,7 +55,7 @@ public:
 
 private:
     Ui::CrashReporter* m_ui;
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
     BacktraceGenerator* m_btg;
 #endif
 
