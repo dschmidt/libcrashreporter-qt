@@ -10,7 +10,7 @@ if(POLICY CMP0063)
 endif()
 
 option(ENABLE_GPL_CODE "Enable GPL-licensed depencencies of libcrashreporter-qt (dr.konqui integration)" OFF)
-if(ENABLE_GPL_CODE)
+if(ENABLE_GPL_CODE AND NOT APPLE AND NOT WIN32)
     add_definitions( -DENABLE_GPL_CODE )
 endif()
 
