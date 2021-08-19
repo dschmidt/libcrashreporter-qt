@@ -21,7 +21,7 @@
 
 #include "CrashReporter.h"
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
 #include "linux-backtrace-generator/backtracegenerator.h"
 #include "linux-backtrace-generator/crashedapplication.h"
 #include "CrashReporterGzip.h"
@@ -87,7 +87,7 @@ CrashReporter::CrashReporter( const QUrl& url, const QStringList& args )
     adjustSize();
     setFixedSize( size() );
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
     if ( args.count() == 8 )
     {
         qDebug() << "These are all our args:" << args.join( ", " );

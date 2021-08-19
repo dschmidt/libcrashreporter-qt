@@ -3,11 +3,7 @@ set(crashreporter_UI CrashReporter.ui)
 set(crashreporter_RC ../../resources.qrc)
 set(crashreporter_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_BINARY_DIR} ${QT_INCLUDES})
 
-if(UNIX AND NOT APPLE)
-    if(NOT ENABLE_GPL_CODE)
-        message(FATAL_ERROR "Using the Linux build requires ENABLE_GPL_CODE to be true.")
-    endif()
-
+if(ENABLE_GPL_CODE)
     list(APPEND crashreporter_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_LIST_DIR}/../../3rdparty/drkonqi-parser
     )
