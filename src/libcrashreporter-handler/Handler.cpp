@@ -124,7 +124,7 @@ LaunchUploader( const wchar_t* dump_dir, const wchar_t* minidump_id, void* conte
 
 #include <unistd.h>
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
 static bool
 GetCrashInfo( const void* crash_context, size_t crash_context_size, void* context )
 {
@@ -185,7 +185,7 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
     if ( !s_active || strlen( crashReporter ) == 0 )
         return false;
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
     const char* applicationName = static_cast<Handler*>(context)->applicationName();
     if ( strlen( applicationName ) == 0 )
         return false;
@@ -210,7 +210,7 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
     if ( pid == 0 )
     {
         // we are the fork
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
         execl( crashReporter,
                crashReporter,
                path,
@@ -233,7 +233,7 @@ LaunchUploader( const char* dump_dir, const char* minidump_id, void* context, bo
         printf( "Error: Can't launch CrashReporter!\n" );
         return false;
     }
-#if defined(Q_OS_LINUX) && defined(ENABLE_CRASH_REPORTER)
+#if defined(Q_OS_LINUX) && defined(ENABLE_CRASH_REPORTER) && defined(ENABLE_GPL_CODE)
     // If we're running on Linux, we expect that the CrashReporter component will
     // attach gdb, do its thing and then kill this process, so we hang here for the
     // time being, on purpose.          -- Teo 3/2016
@@ -259,7 +259,9 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
                            this,
                            true,
                            -1 );
+    #if defined ENABLE_GPL_CODE
     m_crash_handler->set_crash_handler(GetCrashInfo);
+    #endif
     #elif defined Q_OS_MAC
     m_crash_handler =  new google_breakpad::ExceptionHandler( dumpFolderPath.toStdString(), NULL, LaunchUploader, this, true, NULL);
     #elif defined Q_OS_WIN
@@ -268,7 +270,7 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
     #endif
 
     setCrashReporter( crashReporter );
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
     setApplicationData( qApp );
 #endif
 }
@@ -310,7 +312,7 @@ Handler::setCrashReporter( const QString& crashReporter )
 }
 
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
 void
 Handler::setApplicationData( const QCoreApplication* app )
 {

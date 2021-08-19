@@ -32,7 +32,7 @@ namespace google_breakpad
 namespace CrashReporter
 {
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
 static bool GetCrashInfo( const void* crash_context, size_t crash_context_size, void* context );
 #endif
 
@@ -40,7 +40,7 @@ class Handler
 {
     const char* m_crashReporterChar; // yes! It MUST be const char[]
     const wchar_t* m_crashReporterWChar;
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
     int m_pid;
     int m_signalNumber;
     const char* m_applicationName;
@@ -62,7 +62,7 @@ public:
     const char* crashReporterChar() const { return m_crashReporterChar; }
     const wchar_t* crashReporterWChar() const { return m_crashReporterWChar; }
 
-#ifdef Q_OS_LINUX
+#ifdef ENABLE_GPL_CODE
     void setApplicationData( const QCoreApplication* app );
     int pid() const { return m_pid; }
     int signalNumber() const { return m_signalNumber; }
