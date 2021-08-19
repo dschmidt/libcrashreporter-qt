@@ -103,12 +103,6 @@
 #define PR_SET_PTRACER 0x59616d61
 #endif
 
-// A wrapper for the tgkill syscall: send a signal to a specific thread.
-static int tgkill(pid_t tgid, pid_t tid, int sig) {
-  return syscall(__NR_tgkill, tgid, tid, sig);
-  return 0;
-}
-
 namespace google_breakpad {
 
 namespace {
@@ -347,7 +341,7 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
     // In order to retrigger it, we have to queue a new signal by calling
     // kill() ourselves.  The special case (si_pid == 0 && sig == SIGABRT) is
     // due to the kernel sending a SIGABRT from a user request via SysRQ.
-    if (tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
+    if (sys_tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
       // If we failed to kill ourselves (e.g. because a sandbox disallows us
       // to do so), we instead resort to terminating our process. This will
       // result in an incorrect exit code.
@@ -397,12 +391,12 @@ bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
   }
   CrashContext context;
   memcpy(&context.siginfo, info, sizeof(siginfo_t));
-  memcpy(&context.context, uc, sizeof(struct ucontext));
+  memcpy(&context.context, uc, sizeof(struct ucontext_t));
 #if !defined(__ARM_EABI__) && !defined(__mips__)
   // FP state is not part of user ABI on ARM Linux.
   // In case of MIPS Linux FP state is already part of struct ucontext
   // and 'float_state' is not a member of CrashContext.
-  struct ucontext *uc_ptr = (struct ucontext*)uc;
+  struct ucontext_t *uc_ptr = (struct ucontext_t*)uc;
   if (uc_ptr->uc_mcontext.fpregs) {
     memcpy(&context.float_state,
            uc_ptr->uc_mcontext.fpregs,
@@ -426,7 +420,7 @@ bool ExceptionHandler::SimulateSignalDelivery(int sig) {
   // ExceptionHandler::HandleSignal().
   siginfo.si_code = SI_USER;
   siginfo.si_pid = getpid();
-  struct ucontext context;
+  struct ucontext_t context;
   getcontext(&context);
   return HandleSignal(sig, &siginfo, &context);
 }

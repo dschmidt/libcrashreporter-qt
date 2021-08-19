@@ -10,6 +10,10 @@ if(POLICY CMP0063)
 endif()
 
 option(ENABLE_GPL_CODE "Enable GPL-licensed depencencies of libcrashreporter-qt (dr.konqui integration)" OFF)
+if(ENABLE_GPL_CODE AND NOT APPLE AND NOT WIN32)
+    add_definitions( -DENABLE_GPL_CODE )
+endif()
+
 option(ENABLE_CRASH_REPORTER "Enable libcrashreporter-qt GUI component" ON)
 
 find_package(Qt5 COMPONENTS Core Network Widgets)
