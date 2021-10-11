@@ -63,7 +63,6 @@ if(UNIX)
 endif()
 
 if(WIN32)
-    add_definitions( -DUNICODE -fshort-wchar )
     list(APPEND breakpadSources
         client/windows/handler/exception_handler.cc
         client/windows/crash_generation/crash_generation_client.cc
@@ -72,14 +71,20 @@ if(WIN32)
 endif()
 
 
-include_directories(.)
 # ADD_DEFINITIONS( -fPIC )
 add_library(crashreporter-breakpad STATIC ${breakpadSources} )
+target_include_directories( crashreporter-breakpad PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+
+if(WIN32)
+    target_compile_definitions(crashreporter-breakpad PRIVATE UNICODE _UNICODE)
+    if (NOT MSVC)
+        target_compile_options(crashreporter-breakpad PRIVATE -fshort-wchar )
+        target_link_libraries(crashreporter-breakpad PUBLIC mingwex)
+    endif()
+endif()
 
 if(NOT MSVC)
     target_link_libraries(crashreporter-breakpad pthread)
 endif()
 
-if(WIN32 AND NOT MSVC)
-    target_link_libraries(crashreporter-breakpad "mingwex")
-endif()
+add_library(PkgConfig::BREAKPAD ALIAS crashreporter-breakpad)

@@ -30,10 +30,11 @@ add_library(crashreporter-gui STATIC
 
 target_include_directories(crashreporter-gui PUBLIC ${crashreporter_INCLUDE_DIRECTORIES})
 
-target_link_libraries(crashreporter-gui
+target_link_libraries(crashreporter-gui PUBLIC
     Qt5::Core
     Qt5::Widgets
     Qt5::Network
+    PkgConfig::BREAKPAD
     ${crashreporter_LIBRARIES}
 )
 

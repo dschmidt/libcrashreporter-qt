@@ -1,5 +1,5 @@
 project(libcrashreporter-qt)
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 
 if(POLICY CMP0071)
     cmake_policy(SET CMP0071 NEW)
@@ -15,6 +15,14 @@ if(ENABLE_GPL_CODE AND NOT APPLE AND NOT WIN32)
 endif()
 
 option(ENABLE_CRASH_REPORTER "Enable libcrashreporter-qt GUI component" ON)
+
+if (NOT MSVC)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(BREAKPAD REQUIRED IMPORTED_TARGET breakpad breakpad-client)
+else()
+    # with msvc we use an old fork
+    add_subdirectory(3rdparty/breakpad)
+endif()
 
 find_package(Qt5 COMPONENTS Core Network Widgets)
 add_definitions(

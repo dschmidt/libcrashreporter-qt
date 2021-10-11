@@ -1,25 +1,10 @@
-# message(FATAL_ERROR "${CMAKE_CURRENT_LIST_DIR}/../../3rdparty/breakpad")
+add_library(crashreporter-handler STATIC Handler.cpp)
+target_include_directories(crashreporter-handler PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>)
 
-list(APPEND crashreporter-handler_INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_LIST_DIR}/..
-    ${CMAKE_CURRENT_LIST_DIR}/../../3rdparty/breakpad
-    ${QT_QTCORE_INCLUDE_DIR}
-)
-
-list(APPEND crashreporter-handler_SOURCES
-    Handler.cpp
-)
-
-list(APPEND crashreporter-handler_LIBRARIES
-    crashreporter-breakpad
-)
-
-add_library(crashreporter-handler STATIC ${crashreporter-handler_SOURCES})
-target_include_directories(crashreporter-handler PUBLIC ${crashreporter-handler_INCLUDE_DIRECTORIES})
-target_link_libraries(crashreporter-handler
-    ${crashreporter-handler_LIBRARIES}
+target_link_libraries(crashreporter-handler PUBLIC
+    PkgConfig::BREAKPAD
     Qt5::Core)
 
 if(WIN32)
-    add_definitions( -DUNICODE ) #-fshort-wchar )
+    target_compile_definitions(crashreporter-handler PRIVATE UNICODE _UNICODE)
 endif()
