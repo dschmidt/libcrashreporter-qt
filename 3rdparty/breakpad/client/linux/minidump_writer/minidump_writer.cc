@@ -1725,7 +1725,7 @@ class MinidumpWriter {
   const int fd_;  // File descriptor where the minidum should be written.
   const char* path_;  // Path to the file where the minidum should be written.
 
-  const struct ucontext_t* const ucontext_;  // also from the signal handler
+  const ucontext_t* const ucontext_;  // also from the signal handler
   const struct _libc_fpstate* const float_state_;  // ditto
   LinuxDumper* dumper_;
   MinidumpFileWriter minidump_writer_;

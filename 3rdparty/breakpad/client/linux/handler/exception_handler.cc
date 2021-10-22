@@ -391,12 +391,12 @@ bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
   }
   CrashContext context;
   memcpy(&context.siginfo, info, sizeof(siginfo_t));
-  memcpy(&context.context, uc, sizeof(struct ucontext_t));
+  memcpy(&context.context, uc, sizeof(ucontext_t));
 #if !defined(__ARM_EABI__) && !defined(__mips__)
   // FP state is not part of user ABI on ARM Linux.
   // In case of MIPS Linux FP state is already part of struct ucontext
   // and 'float_state' is not a member of CrashContext.
-  struct ucontext_t *uc_ptr = (struct ucontext_t*)uc;
+  ucontext_t *uc_ptr = (ucontext_t*)uc;
   if (uc_ptr->uc_mcontext.fpregs) {
     memcpy(&context.float_state,
            uc_ptr->uc_mcontext.fpregs,
@@ -420,7 +420,7 @@ bool ExceptionHandler::SimulateSignalDelivery(int sig) {
   // ExceptionHandler::HandleSignal().
   siginfo.si_code = SI_USER;
   siginfo.si_pid = getpid();
-  struct ucontext_t context;
+  ucontext_t context;
   getcontext(&context);
   return HandleSignal(sig, &siginfo, &context);
 }
