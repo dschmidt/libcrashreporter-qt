@@ -874,7 +874,7 @@ class CallFrameInfo::Rule {
   // describes how to compute the canonical frame address. Return what the
   // HANDLER member function returned.
   virtual bool Handle(Handler *handler,
-                      uint64 address, int register) const = 0;
+                      uint64 address, int _register) const = 0;
 
   // Equality on rules. We use these to decide which rules we need
   // to report after a DW_CFA_restore_state instruction.
