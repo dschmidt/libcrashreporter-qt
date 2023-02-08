@@ -28,18 +28,14 @@ add_library(crashreporter-gui STATIC
     ${crashreporter_RC_RCC}
 )
 
-target_include_directories(crashreporter-gui PUBLIC ${crashreporter_INCLUDE_DIRECTORIES})
-
 target_link_libraries(crashreporter-gui
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    ${crashreporter_LIBRARIES}
+    PUBLIC
+        Qt5::Core
+        Qt5::Widgets
+        Qt5::Network
+    PRIVATE
+        PkgConfig::BREAKPAD
 )
 
 set_target_properties(crashreporter-gui PROPERTIES AUTOUIC ON)
 set_target_properties(crashreporter-gui PROPERTIES AUTOMOC ON)
-#install(TARGETS crashreporter-gui
-#    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#)
