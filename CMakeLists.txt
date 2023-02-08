@@ -12,6 +12,9 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Only on linux breakpad provides a usable build system.
+# The submodule on the other hand can't be used on linux, 
+# as parts of it requires to be checked out by a seperate tool.
 if (UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(BREAKPAD REQUIRED IMPORTED_TARGET breakpad breakpad-client)
