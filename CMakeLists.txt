@@ -12,6 +12,14 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(BREAKPAD REQUIRED IMPORTED_TARGET breakpad breakpad-client)
+else()
+    add_subdirectory(3rdparty/breakpad)
+endif()
+
+
 option(ENABLE_GPL_CODE "Enable GPL-licensed depencencies of libcrashreporter-qt (dr.konqui integration)" OFF)
 if(ENABLE_GPL_CODE AND NOT APPLE AND NOT WIN32)
     add_definitions( -DENABLE_GPL_CODE )
