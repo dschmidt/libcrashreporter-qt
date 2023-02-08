@@ -2,7 +2,6 @@
 
 list(APPEND crashreporter-handler_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_LIST_DIR}/..
-    ${CMAKE_CURRENT_LIST_DIR}/../../3rdparty/breakpad
     ${QT_QTCORE_INCLUDE_DIR}
 )
 
@@ -17,8 +16,11 @@ list(APPEND crashreporter-handler_LIBRARIES
 add_library(crashreporter-handler STATIC ${crashreporter-handler_SOURCES})
 target_include_directories(crashreporter-handler PUBLIC ${crashreporter-handler_INCLUDE_DIRECTORIES})
 target_link_libraries(crashreporter-handler
-    ${crashreporter-handler_LIBRARIES}
-    Qt5::Core)
+    PUBLIC
+        Qt5::Core
+    PRIVATE
+        ${crashreporter-handler_LIBRARIES}
+    )
 
 if(WIN32)
     add_definitions( -DUNICODE ) #-fshort-wchar )
