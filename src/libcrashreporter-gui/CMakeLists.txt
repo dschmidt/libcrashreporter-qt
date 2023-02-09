@@ -52,4 +52,4 @@ set_target_properties(crashreporter-gui PROPERTIES AUTOUIC ON)
 set_target_properties(crashreporter-gui PROPERTIES AUTOMOC ON)
 
 install(FILES CrashReporter.h DESTINATION ${INCLUDE_INSTALL_DIR}/CrashReporterQt/libcrashreporter-gui)
-install(TARGETS crashreporter-gui EXPORT CrashReporterQtConfig ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+install(TARGETS crashreporter-gui EXPORT CrashReporterQtTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

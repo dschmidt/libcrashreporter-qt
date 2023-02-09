@@ -70,4 +70,4 @@ if(WIN32)
     endif()
 endif()
 
-install(TARGETS crashreporter-breakpad EXPORT CrashReporterQtConfig ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+install(TARGETS crashreporter-breakpad EXPORT CrashReporterQtTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

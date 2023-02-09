@@ -19,4 +19,4 @@ target_include_directories(crashreporter-handler PUBLIC
 )
 
 install(FILES Handler.h DESTINATION ${INCLUDE_INSTALL_DIR}/CrashReporterQt/libcrashreporter-handler)
-install(TARGETS crashreporter-handler EXPORT CrashReporterQtConfig ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+install(TARGETS crashreporter-handler EXPORT CrashReporterQtTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
