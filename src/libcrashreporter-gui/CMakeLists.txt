@@ -27,6 +27,7 @@ add_library(crashreporter-gui STATIC
     ${crashreporter_UI_HEADERS}
     ${crashreporter_RC_RCC}
 )
+target_include_directories(crashreporter-gui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>)
 
 target_link_libraries(crashreporter-gui
     PUBLIC
