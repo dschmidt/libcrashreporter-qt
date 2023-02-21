@@ -69,3 +69,5 @@ if(WIN32)
         target_link_libraries(crashreporter-breakpad PRIVATE "mingwex")
     endif()
 endif()
+
+install(TARGETS crashreporter-breakpad EXPORT CrashReporterQtTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
