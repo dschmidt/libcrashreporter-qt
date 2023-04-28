@@ -24,6 +24,8 @@ find_package(QT 5.15 NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Network Widgets REQUIRED)
 
 include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings NO_POLICY_SCOPE)
 
 # Only on linux breakpad provides a usable build system.
 # The submodule on the other hand can't be used on linux, 
