@@ -4,7 +4,7 @@ set_property(TARGET crashreporter-handler PROPERTY EXPORT_NAME Handler)
 
 target_link_libraries(crashreporter-handler
     PUBLIC
-        Qt5::Core
+        Qt::Core
     PRIVATE
         PkgConfig::BREAKPAD
     )

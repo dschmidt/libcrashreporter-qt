@@ -37,9 +37,9 @@ set_property(TARGET crashreporter-gui PROPERTY EXPORT_NAME Gui)
 
 target_link_libraries(crashreporter-gui
     PUBLIC
-        Qt5::Core
-        Qt5::Widgets
-        Qt5::Network
+        Qt::Core
+        Qt::Widgets
+        Qt::Network
     PRIVATE
         PkgConfig::BREAKPAD
 )
