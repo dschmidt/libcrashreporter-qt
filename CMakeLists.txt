@@ -1,5 +1,5 @@
 project(libcrashreporter-qt)
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.16)
 
 include(FeatureSummary)
 
@@ -19,6 +19,9 @@ endif()
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(QT 5.15 NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Network Widgets REQUIRED)
 
 include(KDEInstallDirs)
 
@@ -40,7 +43,6 @@ endif()
 
 option(ENABLE_CRASH_REPORTER "Enable libcrashreporter-qt GUI component" ON)
 
-find_package(Qt5 COMPONENTS Core Network Widgets)
 add_definitions(
     -DQT_NO_FOREACH
 )
