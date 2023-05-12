@@ -29,7 +29,7 @@ add_library(crashreporter-gui STATIC
 )
 target_include_directories(crashreporter-gui PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
-        $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/CrashReporterQt>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/CrashReporterQt>
 )
 
 add_library(CrashReporterQt::Gui ALIAS crashreporter-gui)
@@ -51,5 +51,5 @@ endif()
 set_target_properties(crashreporter-gui PROPERTIES AUTOUIC ON)
 set_target_properties(crashreporter-gui PROPERTIES AUTOMOC ON)
 
-install(FILES CrashReporter.h DESTINATION ${INCLUDE_INSTALL_DIR}/CrashReporterQt/libcrashreporter-gui)
+install(FILES CrashReporter.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CrashReporterQt/libcrashreporter-gui)
 install(TARGETS crashreporter-gui EXPORT CrashReporterQtTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

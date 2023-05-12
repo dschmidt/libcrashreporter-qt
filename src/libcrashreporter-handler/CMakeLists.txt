@@ -15,8 +15,8 @@ endif()
 
 target_include_directories(crashreporter-handler PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
-        $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}/CrashReporterQt>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/CrashReporterQt>
 )
 
-install(FILES Handler.h DESTINATION ${INCLUDE_INSTALL_DIR}/CrashReporterQt/libcrashreporter-handler)
+install(FILES Handler.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CrashReporterQt/libcrashreporter-handler)
 install(TARGETS crashreporter-handler EXPORT CrashReporterQtTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
