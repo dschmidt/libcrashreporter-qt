@@ -1,7 +1,7 @@
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-find_dependency(Qt@{QT_VERSION_MAJOR}@Core)
+find_dependency(Qt@QT_VERSION_MAJOR@Core)
 
 if (UNIX AND NOT APPLE)
     find_dependency(PkgConfig)
