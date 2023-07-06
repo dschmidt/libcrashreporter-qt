@@ -279,34 +279,34 @@ Handler::Handler( const QString& dumpFolderPath, bool active, const QString& cra
 void
 Handler::setCrashReporter( const QString& crashReporter )
 {
-    QString crashReporterPath;
-    QString localReporter = QString( "%1/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
-    QString globalReporter = QString( "%1/../libexec/%2" ).arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporter );
+    QString crashReporterPath = crashReporter;
+    const QString localReporter = QStringLiteral("%1/%2").arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporterPath );
+    const QString globalReporter = QStringLiteral("%1/../libexec/%2").arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporterPath );
 
-    if ( QFileInfo( localReporter ).exists() )
-        crashReporterPath = localReporter;
-    else if ( QFileInfo( globalReporter ).exists() )
-        crashReporterPath = globalReporter;
-    else {
-        qDebug() << "Could not find \"" << crashReporter << "\" in ../libexec or application path";
-        crashReporterPath = crashReporter;
+    if ( !QFileInfo::exists( crashReporterPath ) ) {
+        if (QFileInfo::exists(localReporter)) {
+          crashReporterPath = localReporter;
+        } else if (QFileInfo::exists(globalReporter)) {
+          crashReporterPath = globalReporter;
+        } else {
+          qWarning() << "Could not find" << crashReporterPath
+                   << "in ../libexec or application path";
+        }
     }
 
 
     // cache reporter path as char*
     char* creporter;
-    std::string sreporter = crashReporterPath.toStdString();
-    creporter = new char[ sreporter.size() + 1 ];
-    strcpy( creporter, sreporter.c_str() );
+    creporter = new char[ crashReporterPath.size() + 1 ];
+    strcpy( creporter, crashReporterPath.toUtf8().constData() );
     m_crashReporterChar = creporter;
 
     qDebug() << "m_crashReporterChar: " << m_crashReporterChar;
 
     // cache reporter path as wchart_t*
     wchar_t* wreporter;
-    std::wstring wsreporter = crashReporterPath.toStdWString();
-    wreporter = new wchar_t[ wsreporter.size() + 10 ];
-    wcscpy( wreporter, wsreporter.c_str() );
+    wreporter = new wchar_t[ crashReporterPath.size() + 1 ];
+    wcscpy( wreporter, reinterpret_cast<const wchar_t *>(crashReporterPath.utf16()) );
     m_crashReporterWChar = wreporter;
     logWindows({L"m_crashReporterWChar: ",  m_crashReporterWChar});
 }
