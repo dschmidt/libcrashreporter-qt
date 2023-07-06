@@ -280,6 +280,11 @@ void
 Handler::setCrashReporter( const QString& crashReporter )
 {
     QString crashReporterPath = crashReporter;
+#ifdef Q_OS_WIN
+    if (!crashReporterPath.endsWith(QLatin1String(".exe"))) {
+        crashReporterPath.append(QStringLiteral(".exe"));
+    }
+#endif
     const QString localReporter = QStringLiteral("%1/%2").arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporterPath );
     const QString globalReporter = QStringLiteral("%1/../libexec/%2").arg( QCoreApplication::instance()->applicationDirPath() ).arg( crashReporterPath );
 
