@@ -252,7 +252,7 @@ CrashReporter::send()
 
 
     QNetworkAccessManager* nam = new QNetworkAccessManager( this );
-    m_request->setHeader( QNetworkRequest::ContentTypeHeader, "multipart/form-data; boundary=thkboundary" );
+    m_request->setHeader( QNetworkRequest::ContentTypeHeader, QStringLiteral("multipart/form-data; boundary=thkboundary"));
     m_reply = nam->post( *m_request, body );
 
     #if QT_VERSION < QT_VERSION_CHECK( 5, 0, 0 )
@@ -289,13 +289,13 @@ CrashReporter::onDone()
     QString const response = QString::fromUtf8( data );
     qDebug() << "RESPONSE:" << response;
 
-    if ( ( m_reply->error() != QNetworkReply::NoError ) || !response.startsWith( "CrashID=" ) )
+    if ( ( m_reply->error() != QNetworkReply::NoError ) || !response.startsWith( QStringLiteral("CrashID=") ) )
     {
         onFail( m_reply->error(), m_reply->errorString() );
     }
     else
     {
-        QString crashId = response.split("\n").at(0).split("=").at(1);
+        QString crashId = response.split(QLatin1Char('\n')).at(0).split(QLatin1Char('=')).at(1);
 
         m_ui->progressLabel->setText( tr( "Sent! <b>Many thanks</b>. Please refer to crash <a href=\"clipboard://%1\"><b>%1</b></a> (click to copy) in bug reports." ).arg(crashId) );
     }
@@ -349,7 +349,7 @@ CrashReporter::onLinkClicked(const QString& link)
 {
     // we just have to handle clipboard "links", used to let the user copy the crash ID easily
     // other links can be ignored
-    static const QString clipboardPrefix = "clipboard://";
+    static const QString clipboardPrefix = QStringLiteral("clipboard://");
 
     if (link.startsWith(clipboardPrefix)) {
         QString toCopyIntoClipboard = link.mid(clipboardPrefix.length());
