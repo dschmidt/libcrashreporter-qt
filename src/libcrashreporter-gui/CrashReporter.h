@@ -69,10 +69,10 @@ private:
     QMap < QByteArray, QByteArray > m_formFileNames;
 
 
-public slots:
+public Q_SLOTS:
     void send();
 
-private slots:
+private Q_SLOTS:
     void onDone();
     void onProgress( qint64 done, qint64 total );
     void onFail( int error, const QString& errorString );
